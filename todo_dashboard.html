@@ -1,0 +1,3822 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TODO ダッシュボード - 2026年5月26日週</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+      padding: 70px 16px 24px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      letter-spacing: 0.02em;
+    }
+
+    header p {
+      margin-top: 6px;
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    .progress-bar-wrap {
+      max-width: 480px;
+      margin: 16px auto 0;
+      background: #dde0e7;
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4f8ef7, #7c5cfc);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-label {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 6px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      transition: box-shadow 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.11);
+    }
+
+    .card.today {
+      border: 2px solid #4f8ef7;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .day-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .today-badge {
+      font-size: 0.7rem;
+      background: #4f8ef7;
+      color: #fff;
+      border-radius: 99px;
+      padding: 2px 8px;
+      font-weight: 600;
+    }
+
+    .day-progress {
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+
+    .task-list {
+      list-style: none;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid #f0f2f5;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.15s;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
+    .task-item:last-child {
+      border-bottom: none;
+    }
+
+    .task-item:hover {
+      background: #f7f9ff;
+    }
+
+    .task-item input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: #4f8ef7;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .task-label {
+      font-size: 0.88rem;
+      color: #333;
+      user-select: none;
+      line-height: 1.4;
+    }
+
+    .task-item.done .task-label {
+      text-decoration: line-through;
+      color: #bbb;
+    }
+
+    .task-label-wrap {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .task-participants {
+      font-size: 0.72rem;
+      color: #aaa;
+      line-height: 1.3;
+      user-select: none;
+    }
+
+    .task-item.done .task-participants { text-decoration: line-through; }
+
+    .notes-card {
+      max-width: 1200px;
+      margin: 18px auto 0;
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    .notes-card h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #555;
+    }
+
+    .notes-card textarea {
+      width: 100%;
+      min-height: 80px;
+      border: 1px solid #e0e3ea;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      resize: vertical;
+      color: #333;
+      background: #fafafa;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .notes-card textarea:focus {
+      border-color: #4f8ef7;
+      background: #fff;
+    }
+
+    .save-btn {
+      margin-top: 8px;
+      padding: 7px 20px;
+      background: linear-gradient(90deg, #4f8ef7, #7c5cfc);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .save-btn:hover { opacity: 0.85; }
+
+    /* ---- Project Section ---- */
+    .section-title {
+      max-width: 1200px;
+      margin: 36px auto 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #444;
+      padding-left: 4px;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 18px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .project-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px 22px 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      transition: box-shadow 0.2s;
+    }
+
+    .project-card:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.11);
+    }
+
+    .project-card.project-card-urgent {
+      border: 2px solid #e53935;
+      background: #fff8f8;
+      position: relative;
+    }
+
+    .project-urgent-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: #e53935;
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 0 14px 0 10px;
+      z-index: 1;
+      white-space: nowrap;
+    }
+
+    .project-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .project-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .status-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+
+    .status-active { background: #e8f4e8; color: #2d7a2d; }
+    .status-hold   { background: #fef3e2; color: #b07800; }
+    .status-done   { background: #e8eaf6; color: #5c6bc0; }
+
+    .project-progress-wrap {
+      background: #edf0f5;
+      border-radius: 99px;
+      height: 7px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .project-progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .proj-fill-0 { background: linear-gradient(90deg, #f7971e, #ffd200); }
+    .proj-fill-1 { background: linear-gradient(90deg, #56ab2f, #a8e063); }
+    .proj-fill-2 { background: linear-gradient(90deg, #e96cce, #f7971e); }
+    .proj-fill-3 { background: linear-gradient(90deg, #2193b0, #6dd5ed); }
+    .proj-fill-4 { background: linear-gradient(90deg, #c94b4b, #e96cce); }
+    .proj-fill-5 { background: linear-gradient(90deg, #7c5cfc, #4f8ef7); }
+
+    .project-progress-label {
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-bottom: 14px;
+    }
+
+    .project-section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 12px 0 6px;
+    }
+
+    .milestone-list, .next-list {
+      list-style: none;
+    }
+
+    .milestone-item, .next-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 5px 4px;
+      border-bottom: 1px solid #f0f2f5;
+      font-size: 0.85rem;
+      color: #333;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+
+    .milestone-item:last-child, .next-item:last-child { border-bottom: none; }
+    .milestone-item:hover, .next-item:hover { background: #f7f9ff; }
+
+    .milestone-item input, .next-item input {
+      width: 15px; height: 15px;
+      accent-color: #7c5cfc;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .milestone-item.done span, .next-item.done span {
+      text-decoration: line-through;
+      color: #bbb;
+    }
+
+    .project-meta {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .project-meta-item {
+      font-size: 0.78rem;
+      color: #888;
+    }
+
+    .project-meta-item strong {
+      color: #555;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 32px;
+      font-size: 0.75rem;
+      color: #bbb;
+    }
+
+    /* ---- Monthly Routine Section ---- */
+    .monthly-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .monthly-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px 22px 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      transition: box-shadow 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .monthly-card:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.11);
+    }
+
+    .monthly-card.urgent {
+      border-color: #f7971e;
+      box-shadow: 0 2px 16px rgba(247,151,30,0.2);
+    }
+
+    .monthly-urgent-banner {
+      background: linear-gradient(90deg, #fff3e0, #ffe0b2);
+      border: 1.5px solid #f7971e;
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #e65100;
+    }
+
+    .monthly-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .monthly-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .deadline-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 99px;
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .deadline-badge.urgent {
+      background: #ffebee;
+      color: #c62828;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.65; }
+    }
+
+    .monthly-progress-wrap {
+      background: #edf0f5;
+      border-radius: 99px;
+      height: 7px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .monthly-progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #f7971e, #ffd200);
+      transition: width 0.4s ease;
+    }
+
+    .monthly-progress-label {
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-bottom: 14px;
+    }
+
+    .step-header {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #7c5cfc;
+      letter-spacing: 0.05em;
+      margin: 16px 0 6px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #ede8ff;
+    }
+
+    .monthly-task-list {
+      list-style: none;
+    }
+
+    .monthly-task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 4px;
+      border-bottom: 1px solid #f0f2f5;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+
+    .monthly-task-item:last-child { border-bottom: none; }
+    .monthly-task-item:hover { background: #f7f9ff; }
+
+    .monthly-task-item input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: #7c5cfc;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .monthly-task-label {
+      font-size: 0.85rem;
+      color: #333;
+      user-select: none;
+      line-height: 1.5;
+    }
+
+    .monthly-task-item.done .monthly-task-label {
+      text-decoration: line-through;
+      color: #bbb;
+    }
+
+    .reload-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      padding: 8px 16px;
+      background: linear-gradient(90deg, #4f8ef7, #7c5cfc);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(79,142,247,0.35);
+      transition: opacity 0.2s, transform 0.15s;
+      z-index: 1000;
+    }
+
+    .reload-btn:hover {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
+
+    .reload-btn:active {
+      transform: translateY(0);
+    }
+
+    /* ---- Top Navigation ---- */
+    .topnav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1500;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 1px 10px rgba(0,0,0,0.09);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      gap: 8px;
+      min-height: 52px;
+    }
+
+    .topnav-links {
+      display: flex;
+      gap: 3px;
+      flex-shrink: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .topnav-navbtn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      color: #777;
+      transition: background 0.18s, color 0.18s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .topnav-navbtn:hover { background: #f0f2f5; color: #1a1a2e; }
+
+    .topnav-navbtn.active {
+      background: linear-gradient(90deg, #4f8ef7, #7c5cfc);
+      color: #fff;
+    }
+
+    .topnav-actions {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .topnav-actionbtn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.18s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .topnav-actionbtn:hover { opacity: 0.82; }
+    .topnav-reload  { background: #edf0f5; color: #555; }
+    .topnav-nippo   { background: linear-gradient(90deg, #56ab2f, #a8e063); color: #fff; }
+    .topnav-shuppo  { background: linear-gradient(90deg, #2193b0, #6dd5ed); color: #fff; }
+
+    @media (max-width: 600px) {
+      .topnav { padding: 6px 10px; gap: 6px; }
+      .topnav-navbtn  { font-size: 0.7rem; padding: 4px 7px; }
+      .topnav-actionbtn { font-size: 0.7rem; padding: 4px 7px; }
+    }
+
+    .cal-not-connected {
+      text-align: center;
+      padding: 24px 10px;
+      color: #bbb;
+      font-size: 0.85rem;
+      line-height: 1.8;
+    }
+
+
+    .delete-task-btn {
+      margin-left: auto;
+      padding: 2px 5px;
+      background: none;
+      border: none;
+      color: #d0d4de;
+      cursor: pointer;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      line-height: 1;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+
+    .delete-task-btn:hover {
+      color: #e53935;
+      background: #fff0f0;
+    }
+
+    /* ---- Report Buttons ---- */
+    .report-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    .report-btn {
+      padding: 8px 22px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .report-btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+    .report-btn:active { transform: translateY(0); }
+    .report-btn-nippo  { background: linear-gradient(90deg, #56ab2f, #a8e063); color: #fff; }
+    .report-btn-shuppo { background: linear-gradient(90deg, #2193b0, #6dd5ed); color: #fff; }
+
+    /* ---- Report Modal ---- */
+    .report-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.52);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .report-modal {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px 28px 22px;
+      width: 100%;
+      max-width: 620px;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.22);
+    }
+
+    .report-modal-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 12px;
+    }
+
+    .report-modal-sub {
+      font-size: 0.82rem;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    .report-modal-input {
+      width: 100%;
+      min-height: 100px;
+      border: 1px solid #e0e3ea;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      resize: vertical;
+      background: #fafafa;
+      outline: none;
+      transition: border 0.2s;
+      line-height: 1.6;
+    }
+
+    .report-modal-input:focus { border-color: #4f8ef7; background: #fff; }
+
+    .report-modal-output {
+      width: 100%;
+      min-height: 300px;
+      border: 1px solid #e0e3ea;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.82rem;
+      font-family: 'Courier New', 'Hiragino Kaku Gothic ProN', monospace;
+      resize: vertical;
+      background: #fafafa;
+      outline: none;
+      color: #333;
+      line-height: 1.75;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 14px;
+    }
+
+    .modal-btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .modal-btn:hover    { opacity: 0.85; }
+    .modal-btn-primary  { background: linear-gradient(90deg, #4f8ef7, #7c5cfc); color: #fff; }
+    .modal-btn-copy     { background: linear-gradient(90deg, #56ab2f, #a8e063); color: #fff; }
+    .modal-btn-close    { background: #edf0f5; color: #555; }
+
+    /* ---- Keyman Section ---- */
+    .keyman-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .keyman-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px 20px 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      border: 2px solid transparent;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .keyman-card:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.11);
+    }
+
+    .keyman-card.overdue {
+      border-color: #e53935;
+      background: #fff8f8;
+    }
+
+    .keyman-card.soon {
+      border-color: #f57c00;
+      background: #fffdf7;
+    }
+
+    .keyman-overdue-badge {
+      display: inline-block;
+      background: #e53935;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 99px;
+      margin-bottom: 8px;
+    }
+
+    /* ---- Tab Section Header (Add button row) ---- */
+    .tab-section-header {
+      display: flex;
+      justify-content: flex-end;
+      max-width: 1200px;
+      margin: 0 auto 14px;
+      padding: 0 4px;
+    }
+
+    .add-item-btn {
+      padding: 8px 20px;
+      background: linear-gradient(90deg, #4f8ef7, #7c5cfc);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.18s, transform 0.15s;
+      box-shadow: 0 2px 8px rgba(79,142,247,0.28);
+    }
+
+    .add-item-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .add-item-btn:active { transform: translateY(0); }
+
+    /* ---- Card Edit / Delete Buttons ---- */
+    .card-action-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid #f0f2f5;
+    }
+
+    .card-edit-btn {
+      flex: 1;
+      padding: 6px 0;
+      background: #edf0f5;
+      color: #555;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .card-edit-btn:hover { background: #dde0e7; }
+
+    .card-delete-btn {
+      flex: 1;
+      padding: 6px 0;
+      background: #fff0f0;
+      color: #e53935;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .card-delete-btn:hover { background: #ffe0e0; }
+
+    /* ---- Edit Modal Form ---- */
+    .pm-form { display: flex; flex-direction: column; gap: 11px; margin-bottom: 16px; }
+
+    .pm-row { display: flex; flex-direction: column; gap: 4px; }
+
+    .pm-label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #666;
+    }
+
+    .pm-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid #e0e3ea;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border 0.2s;
+      color: #333;
+      background: #fafafa;
+    }
+
+    .pm-input:focus { border-color: #4f8ef7; background: #fff; }
+
+    .pm-select {
+      padding: 8px 10px;
+      border: 1.5px solid #e0e3ea;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      background: #fafafa;
+      color: #333;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .pm-list-wrap { display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px; }
+
+    .pm-list-row { display: flex; gap: 6px; align-items: center; }
+
+    .pm-list-input {
+      flex: 1;
+      padding: 7px 10px;
+      border: 1.5px solid #e0e3ea;
+      border-radius: 7px;
+      font-size: 0.83rem;
+      font-family: inherit;
+      outline: none;
+      transition: border 0.2s;
+      background: #fafafa;
+      color: #333;
+    }
+
+    .pm-list-input:focus { border-color: #4f8ef7; background: #fff; }
+
+    .pm-list-del {
+      padding: 4px 8px;
+      background: none;
+      border: none;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 4px;
+      line-height: 1.4;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+
+    .pm-list-del:hover { color: #e53935; background: #fff0f0; }
+
+    .pm-list-add {
+      align-self: flex-start;
+      padding: 5px 12px;
+      background: #edf0f5;
+      color: #555;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+      margin-top: 2px;
+    }
+
+    .pm-list-add:hover { background: #dde0e7; }
+
+    /* ---- Routine Modal Step Block ---- */
+    .rm-step-block {
+      background: #f7f9ff;
+      border: 1px solid #e0e8ff;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .keyman-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 4px;
+    }
+
+    .keyman-company {
+      font-size: 0.75rem;
+      color: #999;
+      margin-bottom: 12px;
+    }
+
+    .keyman-info {
+      font-size: 0.8rem;
+      color: #777;
+      margin-bottom: 5px;
+    }
+
+    .keyman-info span {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .keyman-info.overdue span {
+      color: #e53935;
+    }
+
+    .keyman-info.soon span {
+      color: #f57c00;
+    }
+
+    .keyman-contact-btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 8px 0;
+      background: linear-gradient(90deg, #4f8ef7, #7c5cfc);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .keyman-contact-btn:hover { opacity: 0.85; }
+    .keyman-contact-btn:active { opacity: 0.7; }
+
+    .topnav-calendar { background: linear-gradient(90deg, #4285f4, #34a853); color: #fff; }
+
+    /* ---- Calendar Section ---- */
+    .cal-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .cal-modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      flex: 1;
+    }
+
+    .cal-status {
+      font-size: 0.85rem;
+      color: #666;
+      padding: 16px 0;
+      text-align: center;
+    }
+
+    .cal-time-badge {
+      font-size: 0.72rem;
+      color: #666;
+      background: #f0f2f5;
+      padding: 2px 7px;
+      border-radius: 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+
+    .cal-meeting .cal-time-badge {
+      background: #e8f0fe;
+      color: #1a73e8;
+    }
+
+    .cal-event-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .cal-event-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .cal-participants-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cal-participants-label {
+      font-size: 0.72rem;
+      color: #aaa;
+      flex-shrink: 0;
+    }
+
+    /* ---- Minutes Section ---- */
+    .minutes-card {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px 24px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    .minutes-sub {
+      font-size: 0.82rem;
+      color: #999;
+      margin-bottom: 10px;
+    }
+
+    .minutes-textarea {
+      width: 100%;
+      min-height: 110px;
+      border: 1.5px solid #e0e3ea;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      resize: vertical;
+      background: #fafafa;
+      outline: none;
+      transition: border 0.2s;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    .minutes-textarea:focus { border-color: #4f8ef7; background: #fff; }
+
+    .minutes-input-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .minutes-extract-btn {
+      padding: 8px 20px;
+      background: linear-gradient(90deg, #4f8ef7, #7c5cfc);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      font-family: inherit;
+    }
+
+    .minutes-extract-btn:hover { opacity: 0.85; }
+
+    .minutes-clear-btn {
+      padding: 8px 16px;
+      background: #edf0f5;
+      color: #666;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+
+    .minutes-clear-btn:hover { background: #dde0e7; }
+
+    .minutes-empty-msg {
+      font-size: 0.82rem;
+      color: #f57c00;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .minutes-preview {
+      margin-top: 20px;
+      border-top: 1px solid #f0f2f5;
+      padding-top: 16px;
+    }
+
+    .minutes-preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .minutes-count {
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    .minutes-filter-btn {
+      padding: 5px 12px;
+      border: 1.5px solid #e0e3ea;
+      border-radius: 7px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #fff;
+      color: #666;
+      transition: all 0.18s;
+      font-family: inherit;
+    }
+
+    .minutes-filter-btn:hover:not(.active) { border-color: #4f8ef7; color: #4f8ef7; }
+
+    .minutes-filter-btn.active {
+      background: linear-gradient(90deg, #4f8ef7, #7c5cfc);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .minutes-task-list { list-style: none; }
+
+    .minutes-task-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 4px;
+      border-bottom: 1px solid #f0f2f5;
+      border-radius: 6px;
+      transition: background 0.15s, opacity 0.2s;
+    }
+
+    .minutes-task-item:last-child { border-bottom: none; }
+    .minutes-task-item:hover { background: #f7f9ff; }
+    .minutes-task-item.other-assignee { opacity: 0.42; }
+
+    .minutes-task-cb {
+      width: 16px;
+      height: 16px;
+      accent-color: #4f8ef7;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .minutes-task-text {
+      flex: 1;
+      font-size: 0.85rem;
+      color: #333;
+      line-height: 1.4;
+      padding: 3px 6px;
+      border-radius: 5px;
+      outline: none;
+      min-width: 60px;
+      word-break: break-all;
+      cursor: text;
+      transition: background 0.15s;
+    }
+
+    .minutes-task-text:hover { background: #f0f2f5; }
+    .minutes-task-text:focus { background: #eef3ff; }
+
+    .minutes-select {
+      padding: 4px 5px;
+      border: 1px solid #e0e3ea;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-family: inherit;
+      color: #444;
+      background: #fff;
+      outline: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border 0.2s;
+    }
+
+    .minutes-select:focus { border-color: #4f8ef7; }
+    .minutes-assignee-select { min-width: 74px; }
+    .minutes-day-select { min-width: 54px; }
+
+    .minutes-delete-btn {
+      padding: 1px 6px;
+      background: none;
+      border: none;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 4px;
+      line-height: 1.4;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+
+    .minutes-delete-btn:hover { color: #e53935; background: #fff0f0; }
+
+    .minutes-preview-footer {
+      margin-top: 14px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .minutes-add-btn {
+      padding: 9px 22px;
+      background: linear-gradient(90deg, #56ab2f, #a8e063);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      font-family: inherit;
+    }
+
+    .minutes-add-btn:hover { opacity: 0.85; }
+
+    /* ---- Car Animation ---- */
+    .car-runner {
+      position: fixed;
+      bottom: 80px;
+      left: 0;
+      width: 100px;
+      height: auto;
+      z-index: 9999;
+      pointer-events: none;
+      transition: transform 2.1s ease-in-out;
+    }
+
+    /* ---- Tab UI ---- */
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      max-width: 1200px;
+      margin: 0 auto 24px;
+      padding: 0 4px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      position: relative;
+      flex: 1;
+      min-width: 140px;
+      padding: 14px 10px;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      background: #fff;
+      color: #777;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.15s;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .tab-btn:hover {
+      background: #f0f2f5;
+      color: #1a1a2e;
+      transform: translateY(-1px);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(90deg, #4f8ef7, #7c5cfc);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(79,142,247,0.38);
+      transform: translateY(-2px);
+    }
+
+    .tab-badge {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      background: #e53935;
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 99px;
+      line-height: 1.4;
+    }
+
+    @keyframes tabGlow {
+      0%, 100% { box-shadow: 0 0 8px 2px rgba(230,81,0,0.55), 0 2px 10px rgba(0,0,0,0.07); }
+      50%       { box-shadow: 0 0 22px 7px rgba(230,81,0,0.75), 0 2px 10px rgba(0,0,0,0.07); }
+    }
+
+    @keyframes tabGlowActive {
+      0%, 100% { box-shadow: 0 0 10px 3px rgba(230,81,0,0.6), 0 4px 18px rgba(79,142,247,0.38); }
+      50%       { box-shadow: 0 0 26px 9px rgba(230,81,0,0.8), 0 4px 18px rgba(79,142,247,0.38); }
+    }
+
+    .tab-btn.glow:not(.active) {
+      animation: tabGlow 1.6s ease-in-out infinite;
+      border: 1.5px solid rgba(230,81,0,0.45);
+      color: #b84000;
+    }
+
+    .tab-btn.glow.active {
+      animation: tabGlowActive 1.6s ease-in-out infinite;
+    }
+
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
+    @media (max-width: 600px) {
+      .tab-btn { font-size: 0.8rem; padding: 11px 6px; min-width: 100px; }
+    }
+
+    /* ---- Week Navigation ---- */
+    .week-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .week-nav-btn {
+      padding: 5px 14px;
+      border: 1.5px solid #dde0e7;
+      border-radius: 8px;
+      background: #fff;
+      color: #555;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      line-height: 1.4;
+    }
+
+    .week-nav-btn:hover { background: #f0f2f5; color: #1a1a2e; border-color: #bbb; }
+
+    .week-nav-btn.current-week {
+      background: linear-gradient(90deg, #4f8ef7, #7c5cfc);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    #weekDateLabel {
+      font-size: 0.85rem;
+      color: #888;
+      min-width: 200px;
+      text-align: center;
+    }
+
+    /* ---- Task Link Button ---- */
+    .link-task-btn {
+      padding: 2px 5px;
+      background: none;
+      border: none;
+      color: #c8cdd8;
+      cursor: pointer;
+      font-size: 0.82rem;
+      border-radius: 4px;
+      line-height: 1;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+
+    .link-task-btn:hover { color: #4f8ef7; background: #eef3ff; }
+    .link-task-btn.has-links { color: #4f8ef7; }
+
+    .task-link-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 3px;
+    }
+
+    .task-link-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px 8px;
+      background: #eef3ff;
+      color: #4f8ef7;
+      border-radius: 99px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .task-link-chip:hover { background: #dce8ff; }
+
+    /* ---- Link Modal ---- */
+    .link-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .link-modal {
+      background: #fff;
+      border-radius: 18px;
+      padding: 24px 24px 20px;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+    }
+
+    .link-modal-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+    }
+
+    .link-modal-taskname {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .link-form {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 16px;
+    }
+
+    .link-form-row { display: flex; gap: 7px; }
+
+    .link-form input {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1.5px solid #e0e3ea;
+      border-radius: 8px;
+      font-size: 0.83rem;
+      font-family: inherit;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .link-form input:focus { border-color: #4f8ef7; }
+    .link-name-input { max-width: 130px; flex: none; }
+
+    .link-add-btn {
+      align-self: flex-end;
+      padding: 8px 18px;
+      background: linear-gradient(90deg, #4f8ef7, #7c5cfc);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .link-add-btn:hover { opacity: 0.85; }
+
+    .link-list { list-style: none; margin-bottom: 16px; min-height: 20px; }
+
+    .link-list-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 4px;
+      border-bottom: 1px solid #f0f2f5;
+      font-size: 0.84rem;
+    }
+
+    .link-list-item:last-child { border-bottom: none; }
+
+    .link-item-name {
+      font-weight: 600;
+      color: #4f8ef7;
+      flex-shrink: 0;
+      max-width: 110px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .link-item-url {
+      flex: 1;
+      color: #aaa;
+      font-size: 0.74rem;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .link-item-open {
+      padding: 2px 8px;
+      background: #eef3ff;
+      color: #4f8ef7;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+
+    .link-item-open:hover { background: #dce8ff; }
+
+    .link-delete-btn {
+      padding: 1px 6px;
+      background: none;
+      border: none;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 4px;
+      line-height: 1.4;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+
+    .link-delete-btn:hover { color: #e53935; background: #fff0f0; }
+
+    .link-modal-footer { display: flex; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+
+<nav class="topnav" id="topnav">
+  <div class="topnav-links">
+    <button class="topnav-navbtn" data-target="section-todo">📋 週次TODO</button>
+    <button class="topnav-navbtn" data-target="section-project">🗂 プロジェクト</button>
+    <button class="topnav-navbtn" data-target="section-monthly">📅 月次ルーティン</button>
+    <button class="topnav-navbtn" data-target="section-keyman">🤝 キーマン連絡</button>
+    <button class="topnav-navbtn" data-target="section-minutes">📝 議事録</button>
+  </div>
+  <div class="topnav-actions">
+    <button class="topnav-actionbtn topnav-reload"  onclick="location.reload()">🔄 更新</button>
+    <button class="topnav-actionbtn topnav-nippo"   onclick="openNippoModal()">📝 日報</button>
+    <button class="topnav-actionbtn topnav-shuppo"    onclick="openShuppoModal()">📊 週報</button>
+    <button class="topnav-actionbtn topnav-calendar" id="calBtn" onclick="refreshCalendar()">📅 カレンダー取得<span id="calBtnStatus" style="font-size:0.68rem;font-weight:400;opacity:0.85;margin-left:4px;">（未連携）</span></button>
+  </div>
+</nav>
+
+<header>
+  <h1 style="display:flex;align-items:center;justify-content:center;gap:10px;">
+    <img src="yasaigo_transparent.png" alt="やさいごとき" style="height:40px;width:auto;">
+    <span>📋 週次TODOダッシュボード</span>
+  </h1>
+  <div class="week-nav">
+    <button class="week-nav-btn" onclick="changeWeek(-1)">＜</button>
+    <button class="week-nav-btn" id="weekTodayBtn" onclick="goToCurrentWeek()">今週</button>
+    <span id="weekDateLabel"></span>
+    <button class="week-nav-btn" onclick="changeWeek(1)">＞</button>
+  </div>
+</header>
+
+<!-- タブバー -->
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" data-tab="tab-todo" id="tabBtn-todo">
+    📋 週次TODO
+    <div class="progress-bar-wrap" style="max-width:none;margin:6px 0 0;height:5px;">
+      <div class="progress-bar-fill" id="totalFill" style="width:0%"></div>
+    </div>
+    <span style="font-size:0.75rem;font-weight:400;color:inherit;opacity:0.8;" id="totalLabel">0 / 0 完了</span>
+  </button>
+  <button class="tab-btn" data-tab="tab-project" id="tabBtn-project">
+    🗂️ プロジェクト進捗
+  </button>
+  <button class="tab-btn" data-tab="tab-monthly" id="tabBtn-monthly">
+    📅 月次ルーティン
+  </button>
+  <button class="tab-btn" data-tab="tab-keyman" id="tabBtn-keyman">
+    🤝 キーマン連絡
+  </button>
+</div>
+
+<!-- 週次TODO タブ -->
+<div class="tab-section active" id="tab-todo">
+  <div class="grid" id="section-todo"></div>
+  <div class="notes-card" style="margin-top:18px;">
+    <h2>📝 今週のメモ</h2>
+    <textarea id="memo" placeholder="メモを入力..."></textarea>
+    <br>
+    <button class="save-btn" onclick="saveMemo()">保存</button>
+  </div>
+  <p class="section-title" style="margin-top:28px;" id="section-minutes">📝 議事録タスク抽出</p>
+  <div class="minutes-card">
+    <p class="minutes-sub">議事録・メモを貼り付けると「・」「-」「→」などの箇条書き行をタスクとして抽出します</p>
+    <textarea class="minutes-textarea" id="minutesInput" placeholder="例：&#10;・Aさんに見積もり依頼&#10;→ 次回MTGまでに資料作成&#10;- 〇〇の件を確認する"></textarea>
+    <p class="minutes-empty-msg" id="minutesEmptyMsg">⚠ タスクとして認識できる行が見つかりませんでした</p>
+    <div class="minutes-input-actions">
+      <button class="minutes-extract-btn" onclick="extractMinutesTasks()">🔍 タスクを抽出</button>
+      <button class="minutes-clear-btn"   onclick="clearMinutes()">クリア</button>
+    </div>
+    <div class="minutes-preview" id="minutesPreview" style="display:none">
+      <div class="minutes-preview-header">
+        <span class="minutes-count" id="minutesCount"></span>
+        <button class="minutes-filter-btn" id="minutesFilterBtn" onclick="toggleMinutesFilter()">✅ 自分のタスクのみ表示</button>
+      </div>
+      <div class="minutes-task-list" id="minutesTaskList"></div>
+      <div class="minutes-preview-footer">
+        <button class="minutes-add-btn" id="minutesAddBtn" onclick="addMinutesTasks()">＋ チェック済みをTODOに追加</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- プロジェクト進捗 タブ -->
+<div class="tab-section" id="tab-project">
+  <div class="tab-section-header">
+    <button class="add-item-btn" onclick="openProjModal()">＋ プロジェクト追加</button>
+  </div>
+  <div class="project-grid" id="projectGrid"></div>
+</div>
+
+<!-- 月次ルーティン タブ -->
+<div class="tab-section" id="tab-monthly">
+  <div class="tab-section-header">
+    <button class="add-item-btn" onclick="openRoutineModal()">＋ ルーティン追加</button>
+  </div>
+  <div class="monthly-grid" id="monthlyGrid"></div>
+</div>
+
+<!-- キーマン連絡 タブ -->
+<div class="tab-section" id="tab-keyman">
+  <div class="tab-section-header">
+    <button class="add-item-btn" onclick="openKeymanModal()">＋ キーマン追加</button>
+  </div>
+  <div class="keyman-grid" id="keymanGrid"></div>
+</div>
+
+<footer>チェックボックスをクリックで完了記録・ページを閉じても保存されます</footer>
+
+<!-- Routine Edit Modal -->
+<div class="report-modal-overlay" id="routineModal" style="display:none" onclick="if(event.target===this)closeRoutineModal()">
+  <div class="report-modal" style="max-width:560px;max-height:90vh;overflow-y:auto;">
+    <p class="report-modal-title" id="routineModalTitle">📅 ルーティン追加</p>
+    <div class="pm-form">
+      <div class="pm-row">
+        <label class="pm-label">タイトル <span style="color:#e53935">*</span></label>
+        <input class="pm-input" id="rmTitle" type="text" placeholder="例：月次集計チェック">
+      </div>
+      <div class="pm-row">
+        <label class="pm-label">実施日</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:0.85rem;color:#666;">毎月</span>
+          <input class="pm-input" id="rmDueDay" type="number" min="1" max="31" value="20" style="max-width:80px;">
+          <span style="font-size:0.85rem;color:#666;">日</span>
+        </div>
+      </div>
+      <div class="pm-row">
+        <label class="pm-label">ステップ・チェックリスト</label>
+        <div id="rmSteps" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <button class="pm-list-add" type="button" onclick="addRoutineStep()" style="margin-top:8px;">＋ ステップを追加</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-close" onclick="closeRoutineModal()">キャンセル</button>
+      <button class="modal-btn modal-btn-primary" onclick="saveRoutine()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Project Edit Modal -->
+<div class="report-modal-overlay" id="projModal" style="display:none" onclick="if(event.target===this)closeProjModal()">
+  <div class="report-modal" style="max-width:560px;">
+    <p class="report-modal-title" id="projModalTitle">📁 プロジェクト追加</p>
+    <div class="pm-form">
+      <div class="pm-row">
+        <label class="pm-label">プロジェクト名 <span style="color:#e53935">*</span></label>
+        <input class="pm-input" id="pmName" type="text" placeholder="例：新機能開発">
+      </div>
+      <div class="pm-row">
+        <label class="pm-label">ステータス</label>
+        <select class="pm-select" id="pmStatus">
+          <option value="active">進行中</option>
+          <option value="hold">保留</option>
+          <option value="done">完了</option>
+        </select>
+      </div>
+      <div class="pm-row">
+        <label class="pm-label">目標</label>
+        <input class="pm-input" id="pmGoal" type="text" placeholder="例：〇月末までに完了">
+      </div>
+      <div class="pm-row">
+        <label class="pm-label">期限</label>
+        <input class="pm-input" id="pmDeadline" type="date" style="max-width:200px;">
+      </div>
+      <div class="pm-row">
+        <label class="pm-label">マイルストーン</label>
+        <div class="pm-list-wrap" id="pmMilestones"></div>
+        <button class="pm-list-add" type="button" onclick="addPmListRow('pmMilestones')">＋ 行を追加</button>
+      </div>
+      <div class="pm-row">
+        <label class="pm-label">直近のネクストアクション</label>
+        <div class="pm-list-wrap" id="pmActions"></div>
+        <button class="pm-list-add" type="button" onclick="addPmListRow('pmActions')">＋ 行を追加</button>
+      </div>
+      <div class="pm-row">
+        <label class="pm-label">メモ</label>
+        <textarea class="pm-input" id="pmNotes" rows="3" style="resize:vertical;" placeholder="備考・経緯など"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-close" onclick="closeProjModal()">キャンセル</button>
+      <button class="modal-btn modal-btn-primary" onclick="saveProject()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Keyman Edit Modal -->
+<div class="report-modal-overlay" id="keymanEditModal" style="display:none" onclick="if(event.target===this)closeKeymanModal()">
+  <div class="report-modal" style="max-width:420px;">
+    <p class="report-modal-title" id="keymanModalTitle">👤 キーマン追加</p>
+    <div class="pm-form">
+      <div class="pm-row">
+        <label class="pm-label">氏名 <span style="color:#e53935">*</span></label>
+        <input class="pm-input" id="kmName" type="text" placeholder="例：田中さん">
+      </div>
+      <div class="pm-row">
+        <label class="pm-label">会社名・役職</label>
+        <input class="pm-input" id="kmCompany" type="text" placeholder="例：〇〇社・部長">
+      </div>
+      <div class="pm-row">
+        <label class="pm-label">連絡の目的・メモ</label>
+        <input class="pm-input" id="kmNote" type="text" placeholder="例：定期確認、営業フォロー">
+      </div>
+      <div class="pm-row">
+        <label class="pm-label">連絡周期（日数）</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input class="pm-input" id="kmCycle" type="number" min="1" max="365" value="14" style="max-width:90px;">
+          <span style="font-size:0.82rem;color:#888;">日ごと</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-close" onclick="closeKeymanModal()">キャンセル</button>
+      <button class="modal-btn modal-btn-primary" onclick="saveKeyman()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Link Modal -->
+<div class="link-modal-overlay" id="linkModal" style="display:none" onclick="if(event.target===this)closeLinkModal()">
+  <div class="link-modal">
+    <p class="link-modal-title">🔗 リンク管理</p>
+    <p class="link-modal-taskname" id="linkModalTaskName"></p>
+    <div class="link-form">
+      <div class="link-form-row">
+        <input type="text" id="linkUrlInput" placeholder="https://..." />
+        <input type="text" id="linkNameInput" class="link-name-input" placeholder="名前（例：資料）" />
+      </div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button class="link-add-btn" onclick="addTaskLink()">＋ 追加</button>
+      </div>
+    </div>
+    <ul class="link-list" id="linkList"></ul>
+    <div class="link-modal-footer">
+      <button class="modal-btn modal-btn-close" onclick="closeLinkModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div class="report-modal-overlay" id="reportModal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="report-modal">
+    <!-- Step1: メモ入力（日報のみ） -->
+    <div id="reportInputStep">
+      <p class="report-modal-title">📝 日報作成</p>
+      <p class="report-modal-sub">本日の作業メモを入力してください</p>
+      <textarea class="report-modal-input" id="reportMemoInput" placeholder="作業内容・気づき・課題など..."></textarea>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-close"   onclick="closeModal()">キャンセル</button>
+        <button class="modal-btn modal-btn-primary" onclick="generateNippo()">生成する</button>
+      </div>
+    </div>
+    <!-- Step2: 生成結果表示 -->
+    <div id="reportOutputStep" style="display:none">
+      <p class="report-modal-title" id="reportModalTitle"></p>
+      <textarea class="report-modal-output" id="reportOutput" readonly></textarea>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-close" onclick="closeModal()">閉じる</button>
+        <button class="modal-btn modal-btn-copy" id="copyBtn" onclick="copyReport()">📋 コピー</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  // ============================================================
+  // Google Calendar 連携設定
+  // Google Cloud Console でOAuth2.0クライアントIDを取得してここに貼り付け
+  // console.cloud.google.com → APIとサービス → 認証情報 → OAuth2.0クライアントID
+  // 承認済みのJavaScriptオリジンにこのファイルのURLを登録してください
+  // ============================================================
+  const GOOGLE_CLIENT_ID = '310938803765-7hfeiidghc1970ur2j6ao1dbvota1nh0.apps.googleusercontent.com';
+
+  // ---- 週ナビ ----
+  let currentWeekOffset = 0;
+  const DAY_KEYS   = ['mon', 'tue', 'wed', 'thu', 'fri'];
+  const DAY_LABELS = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
+
+  function getWeekMonday(offset) {
+    const now = new Date();
+    const dow = now.getDay();
+    const diff = (dow === 0 ? -6 : 1 - dow);
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diff + offset * 7);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  }
+
+  function buildDays(offset) {
+    const monday = getWeekMonday(offset);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return DAY_KEYS.map((key, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return {
+        key,
+        label: DAY_LABELS[i],
+        date: `${d.getMonth()+1}/${d.getDate()}`,
+        today: d.getTime() === today.getTime(),
+      };
+    });
+  }
+
+  let DAYS = buildDays(0);
+
+  function getState() {
+    try { return JSON.parse(localStorage.getItem('todo_2026w22') || '{}'); } catch { return {}; }
+  }
+
+  function saveState(s) {
+    localStorage.setItem('todo_2026w22', JSON.stringify(s));
+  }
+
+  function saveMemo() {
+    localStorage.setItem('memo_' + getWeekStorageKey(), document.getElementById('memo').value);
+    const btn = document.querySelector('.save-btn');
+    btn.textContent = '✓ 保存しました';
+    setTimeout(() => btn.textContent = '保存', 1500);
+  }
+
+  // Calendar-driven task state
+  let weekTasks = { mon: [], tue: [], wed: [], thu: [], fri: [] };
+  let calendarLoaded = false;
+  const deletedTaskIds = new Set();
+
+  function getWeekStorageKey() {
+    const m = getWeekMonday(currentWeekOffset);
+    return `${m.getFullYear()}${String(m.getMonth()+1).padStart(2,'0')}${String(m.getDate()).padStart(2,'0')}`;
+  }
+
+  function getCheckedState() {
+    try { return JSON.parse(localStorage.getItem('cal_checked_' + getWeekStorageKey()) || '{}'); } catch { return {}; }
+  }
+
+  function setCheckedState(id, val) {
+    const s = getCheckedState();
+    if (val) s[id] = true; else delete s[id];
+    localStorage.setItem('cal_checked_' + getWeekStorageKey(), JSON.stringify(s));
+  }
+
+  function getWeekMemo() {
+    return localStorage.getItem('memo_' + getWeekStorageKey()) || '';
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function runCarAnimation() {
+    _spawnCar({ bottom: 80, size: 95, duration: 2.1, delay: 0 });
+  }
+
+  function runCarHorde() {
+    const vh = window.innerHeight;
+    const vw = window.innerWidth;
+
+    // ---- CSS @keyframes を動的注入（初回のみ） ----
+    if (!document.getElementById('carSwimStyle')) {
+      const ks = document.createElement('style');
+      ks.id = 'carSwimStyle';
+      ks.textContent = '@keyframes carSwim{from{transform:translateX(calc(100vw + 110px))}to{transform:translateX(-110px)}}';
+      document.head.appendChild(ks);
+    }
+
+    // ---- オーバーレイ ----
+    const overlay = document.createElement('div');
+    overlay.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:9997',
+      'background:rgba(0,40,110,0.35)',
+      'pointer-events:none', 'opacity:0',
+      'transition:opacity 0.8s ease',
+    ].join(';');
+    document.body.appendChild(overlay);
+
+    // ---- 完了メッセージ ----
+    const msg = document.createElement('div');
+    msg.textContent = '🎉 全タスク完了！';
+    msg.style.cssText = [
+      'position:fixed', 'top:40%', 'left:50%',
+      'transform:translate(-50%,-50%) scale(0.3)',
+      'z-index:10001', 'color:#fff',
+      'font-size:2.8rem', 'font-weight:800',
+      'letter-spacing:0.04em',
+      'text-shadow:0 4px 28px rgba(0,120,255,0.7),0 2px 8px rgba(0,0,0,0.8)',
+      'pointer-events:none', 'opacity:0', 'white-space:nowrap',
+      'transition:transform 0.7s cubic-bezier(0.34,1.56,0.64,1),opacity 0.7s ease',
+    ].join(';');
+    document.body.appendChild(msg);
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+      msg.style.opacity    = '1';
+      msg.style.transform  = 'translate(-50%,-50%) scale(1)';
+    }));
+
+    // ---- イワシ大群パラメータ ----
+    const SIZE         = 72;            // 固定サイズ（均一感）
+    const TOTAL        = 300;           // 総台数
+    const DUR_BASE     = 3.8;           // 基本速度（秒）
+    const PLAY_TIME    = 3000;          // 表示時間 3秒
+
+    // 魚群エリア：上下15%を余白、中央70%のみ使用
+    const MARGIN_TOP    = Math.round(vh * 0.15); // 上余白（px）
+    const AREA_HEIGHT   = Math.round(vh * 0.70); // 魚群エリア高さ
+
+    // 行数：エリア高さをSIZEで割って隙間ゼロ
+    const ROWS         = Math.max(Math.floor(AREA_HEIGHT / SIZE), 1);
+    const PER_ROW      = Math.ceil(TOTAL / ROWS);  // 行ごとの台数
+    // 行ごとに少しスピードを変えて波打ち感を出す（行単位で統一）
+    const rowDur       = Array.from({ length: ROWS }, () =>
+      +(DUR_BASE + Math.random() * 0.4).toFixed(3)  // 3.8〜4.2s
+    );
+
+    const carElements = [];
+
+    for (let r = 0; r < ROWS; r++) {
+      // bottom = 下余白(15%) + 行のオフセット
+      const bottom    = MARGIN_TOP + r * SIZE; // 行のY位置（エリア内で隙間ゼロ）
+      const dur       = rowDur[r];             // 行ごとのスピード
+      const rowOffset = r * 0.01;              // 行ごとに10msずらして「板」が斜めに現れる効果
+
+      for (let j = 0; j < PER_ROW; j++) {
+        // 負のdelayで画面全体に初期充填
+        // j=0 → delay=0（右端から出発）
+        // j=PER_ROW-1 → delay≈-dur（左端付近から出発）
+        const preDelay  = -(j / PER_ROW) * dur;
+        const totalDelay = (preDelay + rowOffset).toFixed(4);
+
+        // 行基準位置に±25pxのランダムオフセットを加えて有機的なばらつきを出す
+        const yJitter = Math.round((Math.random() - 0.5) * 50); // -25〜+25px
+        const actualBottom = bottom + yJitter;
+
+        const img = document.createElement('img');
+        img.src = 'yasaigo_transparent.png';
+        img.style.cssText = [
+          'position:fixed', 'left:0',
+          'bottom:' + actualBottom + 'px',
+          'width:' + SIZE + 'px',
+          'height:auto',
+          'z-index:9999', 'pointer-events:none',
+          'animation:carSwim ' + dur + 's linear ' + totalDelay + 's infinite',
+        ].join(';');
+        document.body.appendChild(img);
+        carElements.push(img);
+      }
+    }
+
+    // ---- 3秒後：一斉フェードアウト → 消去 ----
+    setTimeout(() => {
+      // 全車を一斉にフェードアウト
+      carElements.forEach(el => {
+        el.style.animation = 'none';
+        el.style.transition = 'opacity 0.25s ease';
+        el.style.opacity = '0';
+      });
+      // オーバーレイ・メッセージもフェード
+      overlay.style.transition = 'opacity 0.6s ease';
+      overlay.style.opacity    = '0';
+      msg.style.transition     = 'opacity 0.6s ease, transform 0.6s ease';
+      msg.style.opacity        = '0';
+      msg.style.transform      = 'translate(-50%,-50%) scale(1.1)';
+
+      setTimeout(() => {
+        carElements.forEach(el => el.remove());
+        overlay.remove();
+        msg.remove();
+      }, 650);
+    }, PLAY_TIME);
+  }
+
+  function _spawnCar({ bottom, size, duration, delay }) {
+    const img = document.createElement('img');
+    img.src = 'yasaigo_transparent.png';
+    img.style.cssText = [
+      'position:fixed',
+      'left:0',
+      'bottom:' + bottom + 'px',
+      'width:' + size + 'px',
+      'height:auto',
+      'z-index:9999',
+      'pointer-events:none',
+      'transform:translateX(' + (window.innerWidth + size + 10) + 'px)',
+      'transition:transform ' + duration + 's ease-in-out',
+    ].join(';');
+    document.body.appendChild(img);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        img.style.transform = 'translateX(-' + (size + 20) + 'px)';
+      });
+    });
+    setTimeout(() => img.remove(), duration * 1000 + 200);
+  }
+
+  function updateTotals() {
+    const checked = getCheckedState();
+    let total = 0, done = 0;
+    DAYS.forEach(d => {
+      (weekTasks[d.key] || []).filter(t => !deletedTaskIds.has(t.id)).forEach(t => {
+        total++;
+        if (checked[t.id]) done++;
+      });
+    });
+    document.getElementById('totalFill').style.width = total ? (done / total * 100) + '%' : '0%';
+    document.getElementById('totalLabel').textContent = `${done} / ${total} 完了`;
+  }
+
+  function render() {
+    const s = getState();
+    const checked = getCheckedState();
+    const grid = document.getElementById('section-todo');
+    grid.innerHTML = '';
+
+    DAYS.forEach(d => {
+      const tasks = (weekTasks[d.key] || []).filter(t => !deletedTaskIds.has(t.id));
+      const doneCnt = tasks.filter(t => checked[t.id]).length;
+
+      const card = document.createElement('div');
+      card.className = 'card' + (d.today ? ' today' : '');
+      const badge = d.today ? '<span class="today-badge">TODAY</span>' : '';
+
+      if (!calendarLoaded) {
+        card.innerHTML = `
+          <div class="card-header">
+            <span class="day-title">${d.label} <span style="font-weight:400;color:#888;font-size:0.85em">(${d.date})</span></span>
+            <span>${badge}</span>
+          </div>
+          <div class="cal-not-connected">📅 カレンダー未連携</div>
+        `;
+        grid.appendChild(card);
+        return;
+      }
+
+      card.innerHTML = `
+        <div class="card-header">
+          <span class="day-title">${d.label} <span style="font-weight:400;color:#888;font-size:0.85em">(${d.date})</span></span>
+          <span>${badge}<span class="day-progress">${doneCnt}/${tasks.length}</span></span>
+        </div>
+        <ul class="task-list" id="list_${d.key}"></ul>
+      `;
+      grid.appendChild(card);
+
+      const ul = document.getElementById('list_' + d.key);
+
+      function refreshDayProgress() {
+        const dc = ul.querySelectorAll('input:checked').length;
+        const tc = ul.querySelectorAll('input[type="checkbox"]').length;
+        card.querySelector('.day-progress').textContent = `${dc}/${tc}`;
+      }
+
+      tasks.forEach(task => {
+        const isChecked = !!checked[task.id];
+        const li = document.createElement('li');
+        li.className = 'task-item' + (isChecked ? ' done' : '');
+        const ptHtml = task.participants
+          ? `<span class="task-participants">👥 ${escapeHtml(task.participants)}</span>`
+          : '';
+        const taskLinks = getTaskLinks(task.id);
+        const hasLinks = taskLinks.length > 0;
+        const chipsHtml = hasLinks
+          ? `<div class="task-link-chips">${taskLinks.map(l =>
+              `<a class="task-link-chip" href="${escapeHtml(l.url)}" target="_blank" rel="noopener">🔗 ${escapeHtml(l.name || l.url)}</a>`
+            ).join('')}</div>`
+          : '';
+        li.innerHTML = `
+          <input type="checkbox" id="ct_${task.id}" ${isChecked ? 'checked' : ''}>
+          <span class="task-label-wrap">
+            <label class="task-label" for="ct_${task.id}">${escapeHtml(task.text)}</label>
+            ${ptHtml}
+            ${chipsHtml}
+          </span>
+          <button class="link-task-btn${hasLinks ? ' has-links' : ''}" title="リンク追加" data-taskid="${escapeHtml(task.id)}">🔗</button>
+          <button class="delete-task-btn" title="削除">🗑</button>
+        `;
+        li.querySelector('.link-task-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          openLinkModal(task.id, task.text);
+        });
+        li.querySelector('input').addEventListener('change', e => {
+          setCheckedState(task.id, e.target.checked);
+          li.classList.toggle('done', e.target.checked);
+          if (e.target.checked) {
+            // 全タスク完了なら大群、そうでなければ1台
+            const allChecked = ul.querySelectorAll('input[type="checkbox"]').length > 0
+              && ul.querySelectorAll('input:checked').length === ul.querySelectorAll('input[type="checkbox"]').length;
+            if (allChecked) {
+              runCarHorde();
+            } else {
+              runCarAnimation();
+            }
+          }
+          updateTotals();
+          refreshDayProgress();
+        });
+        li.querySelector('.delete-task-btn').addEventListener('click', () => {
+          deletedTaskIds.add(task.id);
+          li.remove();
+          updateTotals();
+          refreshDayProgress();
+        });
+        ul.appendChild(li);
+      });
+    });
+
+    document.getElementById('memo').value = getWeekMemo();
+    updateTotals();
+  }
+
+  const PROJECTS_DEFAULT = [
+    {
+      key: 'proj_aibpr',
+      name: 'AI BPR推進',
+      status: 'active',
+      statusLabel: '進行中',
+      deadline: '未定',
+      fillClass: 'proj-fill-0',
+      milestones: [],
+      nextActions: [
+        'AI BPR資料作成 (5/26)',
+        'AI BPRまとめ (5/28)',
+        'DSチームmtgでAI BPR共有 (5/28)'
+      ]
+    },
+    {
+      key: 'proj_eval',
+      name: '評価制度運用',
+      status: 'active',
+      statusLabel: '進行中',
+      deadline: '2026年8月末',
+      fillClass: 'proj-fill-1',
+      milestones: [
+        '全員の評価実施（1週間6名ペース）',
+        '面談の設定',
+        '面談実施',
+        '昇給者の集計',
+        '昇給の稟議申請'
+      ],
+      nextActions: [
+        '束原さん評価内容まとめ（5/26）',
+        '束原さん評価面談（5/27）',
+        '福岡・鬼塚さんリーダー打診検討',
+        '静岡エリア展開準備（名古屋落ち着き次第）',
+        '北海道講習会の準備（7/7〜9 石原・岩崎）'
+      ]
+    },
+    {
+      key: 'proj_odd',
+      name: 'office de drink',
+      status: 'active',
+      statusLabel: '進行中',
+      deadline: '2026年9月末',
+      fillClass: 'proj-fill-2',
+      milestones: [
+        'ステップ1　全対象顧客に架電',
+        'ステップ2　商談アポイント 20件獲得',
+        'ステップ3　10社契約'
+      ],
+      nextActions: []
+    },
+    {
+      key: 'proj_bestart',
+      name: 'SBS→BESTART切り替え',
+      status: 'active',
+      statusLabel: '進行中',
+      deadline: '2026年6月1日',
+      fillClass: 'proj-fill-3',
+      milestones: [
+        'BESTART移行確定（件数単価1,300円）',
+        '6月1日切り替え完了確認'
+      ],
+      milestoneDone: [true, false],
+      nextActions: []
+    },
+    {
+      key: 'proj_ikebukuro',
+      name: '池袋デポ解約',
+      status: 'active',
+      statusLabel: '進行中',
+      deadline: '2026年7月末',
+      fillClass: 'proj-fill-4',
+      milestones: [
+        '解約確定',
+        '7月末解約完了'
+      ],
+      milestoneDone: [true, false],
+      nextActions: []
+    },
+    {
+      key: 'proj_nagoya',
+      name: '名古屋デポ開設',
+      status: 'active',
+      statusLabel: '進行中',
+      deadline: '2026年9月稼働開始予定',
+      fillClass: 'proj-fill-5',
+      milestones: [
+        'ライアスへの打診完了確認',
+        'SBS・エスラインギフへの見積もり取得',
+        'デポ開設・稼働開始'
+      ],
+      nextActions: []
+    }
+  ];
+
+  // ---- Projects: localStorage動的管理 ----
+  function getProjectsData() {
+    try {
+      const s = JSON.parse(localStorage.getItem('user_projects') || 'null');
+      if (Array.isArray(s)) return s;
+    } catch {}
+    return PROJECTS_DEFAULT.map(p => Object.assign({}, p));
+  }
+  function saveProjectsData(arr) { localStorage.setItem('user_projects', JSON.stringify(arr)); }
+  let PROJECTS = getProjectsData();
+
+  function renderProjects() {
+    const s = getState();
+    const grid = document.getElementById('projectGrid');
+    grid.innerHTML = '';
+
+    PROJECTS.forEach((p, pi) => {
+      // milestoneDone provides preset checked state (e.g. already-done items)
+      if (p.milestoneDone) {
+        p.milestoneDone.forEach((v, i) => {
+          if (v && s[p.key + '_ms_' + i] === undefined) {
+            s[p.key + '_ms_' + i] = true;
+          }
+        });
+        saveState(s);
+      }
+      const msDone = p.milestones.filter((_, i) => s[p.key + '_ms_' + i]).length;
+      const msTotal = p.milestones.length;
+      const pct = msTotal ? Math.round(msDone / msTotal * 100) : 0;
+
+      // 期限まで7日以内かチェック
+      let projUrgent = false;
+      let projDiffDays = null;
+      if (p.deadline && p.deadline !== '未定') {
+        const dm = p.deadline.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+        if (dm) {
+          const dl = new Date(+dm[1], +dm[2] - 1, +dm[3]);
+          projDiffDays = Math.ceil((dl - new Date()) / 864e5);
+          projUrgent = projDiffDays >= 0 && projDiffDays <= 7;
+        }
+      }
+
+      const deadlineColor = projUrgent ? '#e53935' : '#999';
+      const deadlineHtml = p.deadline
+        ? `<span style="font-size:0.75rem;color:${deadlineColor};font-weight:${projUrgent ? '700' : '400'};">期限：${p.deadline}${projUrgent ? `（あと${projDiffDays}日）` : ''}</span>`
+        : '';
+      const msLabel = msTotal ? `マイルストーン ${msDone} / ${msTotal} (${pct}%)` : 'マイルストーン未設定';
+      const goalHtml = p.goal ? `<div style="font-size:0.78rem;color:#666;margin-bottom:6px;">🎯 ${escapeHtml(p.goal)}</div>` : '';
+      const notesHtml = p.notes ? `<div style="margin-top:10px;font-size:0.78rem;color:#999;border-top:1px solid #f0f2f5;padding-top:8px;line-height:1.5;">${escapeHtml(p.notes)}</div>` : '';
+      const card = document.createElement('div');
+      card.className = 'project-card' + (projUrgent ? ' project-card-urgent' : '');
+      const urgentBadgeHtml = projUrgent ? '<span class="project-urgent-badge">⚠️ 期限間近</span>' : '';
+      card.innerHTML = `
+        ${urgentBadgeHtml}
+        <div class="project-header">
+          <span class="project-name">${escapeHtml(p.name)}</span>
+          <span class="status-badge status-${p.status}">${escapeHtml(p.statusLabel)}</span>
+        </div>
+        ${goalHtml}
+        ${deadlineHtml}
+        <div class="project-progress-wrap" style="margin-top:8px;">
+          <div class="project-progress-fill ${p.fillClass}" id="${p.key}_bar" style="width:${pct}%"></div>
+        </div>
+        <div class="project-progress-label" id="${p.key}_label">${msLabel}</div>
+        <div class="project-section-label">マイルストーン</div>
+        <ul class="milestone-list" id="${p.key}_ms"></ul>
+        <div class="project-section-label">直近のネクストアクション</div>
+        <ul class="next-list" id="${p.key}_na"></ul>
+        ${notesHtml}
+      `;
+      grid.appendChild(card);
+
+      // Milestones
+      const msList = document.getElementById(p.key + '_ms');
+      p.milestones.forEach((m, i) => {
+        const checked = !!s[p.key + '_ms_' + i];
+        const li = document.createElement('li');
+        li.className = 'milestone-item' + (checked ? ' done' : '');
+        li.innerHTML = `
+          <input type="checkbox" id="${p.key}_ms_${i}" ${checked ? 'checked' : ''}>
+          <span>${m}</span>
+        `;
+        li.querySelector('input').addEventListener('change', e => {
+          const st = getState();
+          st[p.key + '_ms_' + i] = e.target.checked;
+          saveState(st);
+          li.classList.toggle('done', e.target.checked);
+          const d2 = p.milestones.filter((_, j) => st[p.key + '_ms_' + j]).length;
+          const pct2 = msTotal ? Math.round(d2 / msTotal * 100) : 0;
+          document.getElementById(p.key + '_bar').style.width = pct2 + '%';
+          document.getElementById(p.key + '_label').textContent = `マイルストーン ${d2} / ${msTotal} (${pct2}%)`;
+        });
+        msList.appendChild(li);
+      });
+
+      // Next actions
+      const naList = document.getElementById(p.key + '_na');
+      p.nextActions.forEach((a, i) => {
+        const checked = !!s[p.key + '_na_' + i];
+        const li = document.createElement('li');
+        li.className = 'next-item' + (checked ? ' done' : '');
+        li.innerHTML = `
+          <input type="checkbox" id="${p.key}_na_${i}" ${checked ? 'checked' : ''}>
+          <span>${escapeHtml(a)}</span>
+        `;
+        li.querySelector('input').addEventListener('change', e => {
+          const st = getState();
+          st[p.key + '_na_' + i] = e.target.checked;
+          saveState(st);
+          li.classList.toggle('done', e.target.checked);
+        });
+        naList.appendChild(li);
+      });
+
+      // Edit / Delete buttons
+      const actionRow = document.createElement('div');
+      actionRow.className = 'card-action-row';
+      actionRow.innerHTML = `
+        <button class="card-edit-btn">✏️ 編集</button>
+        <button class="card-delete-btn">🗑️ 削除</button>
+      `;
+      actionRow.querySelector('.card-edit-btn').addEventListener('click', () => openProjModal(p.key));
+      actionRow.querySelector('.card-delete-btn').addEventListener('click', () => deleteProject(p.key));
+      card.appendChild(actionRow);
+    });
+  }
+
+  // ---- Routines: 動的管理 ----
+  const ROUTINES_DEFAULT = [
+    {
+      key: 'coolpack',
+      title: '🧊 蓄冷材管理チェックリスト',
+      dueDay: 20,
+      steps: [
+        {
+          key: 'step1', label: 'STEP1 データ入力・更新',
+          tasks: [
+            '季節区分（保冷剤個数）を確認（5〜10月：2個 / 11〜4月：1個）',
+            'A1:M20のデータ入力が完了した',
+            '欠損・異常値がないか確認した'
+          ]
+        },
+        {
+          key: 'step2', label: 'STEP2 過不足チェック',
+          tasks: [
+            '過不足列（列M）を確認し、不足デポをリストアップ',
+            '緊急対応デポ（-50以上）の対応を行った',
+            '余剰デポの確認を行った'
+          ]
+        },
+        {
+          key: 'step3', label: 'STEP3 送付数の決定・連絡',
+          tasks: [
+            '翌月送付予定数を算出し、列Nに記入した',
+            '送付リストを作成した',
+            '物流担当者・各デポへ連絡した'
+          ]
+        },
+        {
+          key: 'step4', label: 'STEP4 レポート・記録',
+          tasks: [
+            '当月データをアーカイブシートに記録した',
+            '月次レポート（過不足サマリー）を作成した',
+            '翌月引き継ぎメモを作成した'
+          ]
+        }
+      ]
+    }
+  ];
+
+  function getRoutinesData() {
+    try {
+      const s = JSON.parse(localStorage.getItem('user_routines') || 'null');
+      if (Array.isArray(s)) return s;
+    } catch {}
+    return ROUTINES_DEFAULT.map(r => Object.assign({}, r));
+  }
+  function saveRoutinesData(arr) { localStorage.setItem('user_routines', JSON.stringify(arr)); }
+  let ROUTINES = getRoutinesData();
+
+  function getRoutineDeadline(routine) {
+    const dueDay = routine.dueDay || 20;
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+    if (d > dueDay) {
+      const nm = m + 1 > 11 ? 0 : m + 1;
+      const ny = m + 1 > 11 ? y + 1 : y;
+      return new Date(ny, nm, dueDay);
+    }
+    return new Date(y, m, dueDay);
+  }
+
+  function updateRoutineProgress(routineKey, monthKey) {
+    const routine = ROUTINES.find(r => r.key === routineKey);
+    if (!routine) return;
+    const s = getState();
+    let total = 0, done = 0;
+    routine.steps.forEach(step => {
+      step.tasks.forEach((_, i) => {
+        total++;
+        if (s[`${monthKey}_${step.key}_${i}`]) done++;
+      });
+    });
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const fill  = document.getElementById(routineKey + '_fill');
+    const label = document.getElementById(routineKey + '_label');
+    if (fill)  fill.style.width = pct + '%';
+    if (label) label.textContent = `${done} / ${total} 完了`;
+  }
+
+  function buildRoutineCard(routine) {
+    const deadline = getRoutineDeadline(routine);
+    const now = new Date();
+    const diffDays = Math.ceil((deadline - now) / 864e5);
+    const isUrgent = diffDays >= 0 && diffDays <= 5;
+    const monthKey = `${routine.key}_${deadline.getFullYear()}_${deadline.getMonth() + 1}`;
+
+    const s = getState();
+    let total = 0, done = 0;
+    routine.steps.forEach(step => {
+      step.tasks.forEach((_, i) => {
+        total++;
+        if (s[`${monthKey}_${step.key}_${i}`]) done++;
+      });
+    });
+    const pct = total ? Math.round(done / total * 100) : 0;
+
+    const badgeText = isUrgent
+      ? `⚠️ 期限：${deadline.getMonth()+1}月${deadline.getDate()}日（あと${diffDays}日）`
+      : `期限：毎月${routine.dueDay}日`;
+    const urgentBanner = isUrgent
+      ? `<div class="monthly-urgent-banner"><span style="font-size:1.3rem;">⚠️</span> 期限まであと <strong style="font-size:1.2rem;margin:0 4px;">${diffDays}</strong> 日！（${deadline.getMonth()+1}月${deadline.getDate()}日締切）</div>`
+      : '';
+
+    const card = document.createElement('div');
+    card.className = 'monthly-card' + (isUrgent ? ' urgent' : '');
+    card.innerHTML = `
+      <div class="monthly-card-header">
+        <span class="monthly-title">${escapeHtml(routine.title)}</span>
+        <span class="deadline-badge${isUrgent ? ' urgent' : ''}">${badgeText}</span>
+      </div>
+      ${urgentBanner}
+      <div class="monthly-progress-wrap">
+        <div class="monthly-progress-fill" id="${routine.key}_fill" style="width:${pct}%"></div>
+      </div>
+      <p class="monthly-progress-label" id="${routine.key}_label">${done} / ${total} 完了</p>
+      <div id="${routine.key}_steps"></div>
+      <div class="card-action-row">
+        <button class="card-edit-btn">✏️ 編集</button>
+        <button class="card-delete-btn">🗑️ 削除</button>
+      </div>
+    `;
+    card.querySelector('.card-edit-btn').addEventListener('click', () => openRoutineModal(routine.key));
+    card.querySelector('.card-delete-btn').addEventListener('click', () => deleteRoutine(routine.key));
+
+    const stepsContainer = card.querySelector('[id="' + routine.key + '_steps"]');
+    routine.steps.forEach(step => {
+      const header = document.createElement('div');
+      header.className = 'step-header';
+      header.textContent = step.label;
+      stepsContainer.appendChild(header);
+
+      const ul = document.createElement('ul');
+      ul.className = 'monthly-task-list';
+      step.tasks.forEach((task, i) => {
+        const taskKey = `${monthKey}_${step.key}_${i}`;
+        const checked = !!s[taskKey];
+        const li = document.createElement('li');
+        li.className = 'monthly-task-item' + (checked ? ' done' : '');
+        li.innerHTML = `
+          <input type="checkbox" id="${taskKey}" ${checked ? 'checked' : ''}>
+          <label class="monthly-task-label" for="${taskKey}">${escapeHtml(task)}</label>
+        `;
+        li.querySelector('input').addEventListener('change', e => {
+          const st = getState();
+          st[taskKey] = e.target.checked;
+          saveState(st);
+          li.classList.toggle('done', e.target.checked);
+          updateRoutineProgress(routine.key, monthKey);
+        });
+        ul.appendChild(li);
+      });
+      stepsContainer.appendChild(ul);
+    });
+
+    return card;
+  }
+
+  function renderRoutines() {
+    const grid = document.getElementById('monthlyGrid');
+    grid.innerHTML = '';
+    ROUTINES.forEach(routine => grid.appendChild(buildRoutineCard(routine)));
+  }
+
+  // ---- Keyman ----
+  const KEYMANS_DEFAULT = [
+    { key: 'km1', name: '坂野さん', company: '三栄乳販・社長',             note: '定期連絡', cycle: 14 },
+    { key: 'km2', name: '吉野さん', company: '北海道コカコーラ・チーフプランナー', note: '進捗確認', cycle: 14 },
+    { key: 'km3', name: '堤さん',   company: 'トラストシステム・次長',      note: '状況確認', cycle: 14 },
+    { key: 'km4', name: '春野さん', company: 'ベネッセパレット・執行役員',  note: 'ODY導入',  cycle: 14 },
+    { key: 'km5', name: '山口さん', company: 'スリーマウス・社長',          note: 'パートナー', cycle: 14 },
+  ];
+
+  // ---- Keymans: localStorage動的管理 ----
+  function getKeymansData() {
+    try {
+      const s = JSON.parse(localStorage.getItem('user_keymans') || 'null');
+      if (Array.isArray(s)) return s;
+    } catch {}
+    return KEYMANS_DEFAULT.map(k => Object.assign({}, k));
+  }
+  function saveKeymansData(arr) { localStorage.setItem('user_keymans', JSON.stringify(arr)); }
+  let KEYMANS = getKeymansData();
+
+  function getKeymanState() {
+    try { return JSON.parse(localStorage.getItem('keyman_contacts') || '{}'); } catch { return {}; }
+  }
+
+  function saveKeymanState(s) {
+    localStorage.setItem('keyman_contacts', JSON.stringify(s));
+  }
+
+  function parseLocalDate(str) {
+    if (!str) return null;
+    const [y, m, d] = str.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function todayLocalStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function formatJpDate(str) {
+    if (!str) return '－';
+    const [y, m, d] = str.split('-').map(Number);
+    return `${y}/${String(m).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
+  }
+
+  function addDays(str, days) {
+    const [y, m, d] = str.split('-').map(Number);
+    const next = new Date(y, m - 1, d + days);
+    return `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(next.getDate()).padStart(2,'0')}`;
+  }
+
+  function renderKeymans() {
+    const s = getKeymanState();
+    const grid = document.getElementById('keymanGrid');
+    grid.innerHTML = '';
+    const todayStr = todayLocalStr();
+    const todayDate = parseLocalDate(todayStr);
+
+    // 期限状態を計算してから overdue → soon → ok の順にソート
+    const keymanData = KEYMANS.map(km => {
+      const lastContact = s[km.key + '_last'] || null;
+      const nextContact = s[km.key + '_next'] || null;
+      let urgency = 2; // 0=overdue, 1=soon, 2=ok
+      let diffDays = null;
+      if (nextContact) {
+        const nextDate = parseLocalDate(nextContact);
+        diffDays = Math.round((nextDate - todayDate) / (1000 * 60 * 60 * 24));
+        if (diffDays < 0) urgency = 0;
+        else if (diffDays <= 3) urgency = 1;
+      }
+      return { km, lastContact, nextContact, urgency, diffDays };
+    });
+    keymanData.sort((a, b) => a.urgency - b.urgency);
+
+    keymanData.forEach(({ km, lastContact, nextContact, urgency }) => {
+      let cardClass = 'keyman-card';
+      let nextInfoClass = 'keyman-info';
+      let badgeHtml = '';
+
+      if (urgency === 0) {
+        cardClass += ' overdue';
+        nextInfoClass += ' overdue';
+        badgeHtml = '<span class="keyman-overdue-badge">🔴 連絡期限超過</span>';
+      } else if (urgency === 1) {
+        cardClass += ' soon';
+        nextInfoClass += ' soon';
+      }
+
+      const card = document.createElement('div');
+      card.className = cardClass;
+      card.innerHTML = `
+        ${badgeHtml}
+        <div class="keyman-name">${escapeHtml(km.name)}</div>
+        <div class="keyman-company">${escapeHtml(km.company)}</div>
+        <div class="keyman-info" style="margin-bottom:10px;color:#aaa;font-size:0.74rem;">${escapeHtml(km.note)}　／　${km.cycle}日ごと</div>
+        <div class="keyman-info">最終連絡日：<span>${formatJpDate(lastContact)}</span></div>
+        <div class="${nextInfoClass}">次回連絡予定：<span>${formatJpDate(nextContact)}</span></div>
+        <button class="keyman-contact-btn">✓ 連絡済み</button>
+        <div class="card-action-row" style="margin-top:8px;">
+          <button class="card-edit-btn km-edit-btn">✏️ 編集</button>
+          <button class="card-delete-btn km-delete-btn">🗑️ 削除</button>
+        </div>
+      `;
+
+      card.querySelector('.keyman-contact-btn').addEventListener('click', function() {
+        const st = getKeymanState();
+        const t = todayLocalStr();
+        st[km.key + '_last'] = t;
+        st[km.key + '_next'] = addDays(t, km.cycle);
+        saveKeymanState(st);
+        this.textContent = '✓ 更新しました';
+        setTimeout(() => renderKeymans(), 800);
+      });
+      card.querySelector('.km-edit-btn').addEventListener('click', () => openKeymanModal(km.key));
+      card.querySelector('.km-delete-btn').addEventListener('click', () => deleteKeyman(km.key));
+
+      grid.appendChild(card);
+    });
+  }
+
+  // ---- Minutes Task Extraction ----
+  let minutesTasks = [];
+  let minutesFilterActive = false;
+
+  const MINUTES_PATTERNS = [
+    /^[\s　]*[・•\-\*＊]\s+(.+)/,
+    /^[\s　]*[□✓☐■▪◆◎▶]\s*(.+)/,
+    /^[\s　]*\[\s*[ x]\s*\]\s*(.+)/i,
+    /^[\s　]*(?:TODO|タスク|action|AP)[：:]\s*(.+)/i,
+    /^[\s　]*[①②③④⑤⑥⑦⑧⑨⑩]\s*(.+)/,
+    /^[\s　]*\d+[\.．]\s+(.+)/,
+    /^[\s　]*→\s*(.+)/,
+  ];
+
+  function parseTasksFromMinutes(text) {
+    const seen = new Set();
+    return text.split('\n').reduce((acc, line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.length < 3) return acc;
+      for (const p of MINUTES_PATTERNS) {
+        const m = trimmed.match(p);
+        if (m) {
+          const task = m[1].trim();
+          if (task.length >= 2 && !seen.has(task)) { seen.add(task); acc.push(task); }
+          return acc;
+        }
+      }
+      return acc;
+    }, []);
+  }
+
+  function extractMinutesTasks() {
+    const text = document.getElementById('minutesInput').value;
+    const emptyMsg = document.getElementById('minutesEmptyMsg');
+    const extracted = parseTasksFromMinutes(text);
+
+    if (!extracted.length) {
+      emptyMsg.style.display = '';
+      document.getElementById('minutesPreview').style.display = 'none';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+
+    const todayKey = (DAYS.find(d => d.today) || DAYS[0]).key;
+    minutesTasks = extracted.map((t, i) => ({
+      id: 'mt_' + Date.now().toString(36) + i,
+      text: t,
+      assignee: 'self',
+      day: todayKey,
+      checked: true,
+    }));
+
+    minutesFilterActive = false;
+    document.getElementById('minutesFilterBtn').classList.remove('active');
+    renderMinutesPreview();
+    document.getElementById('minutesPreview').style.display = '';
+  }
+
+  function renderMinutesPreview() {
+    const list = document.getElementById('minutesTaskList');
+    list.innerHTML = '';
+
+    const visible = minutesFilterActive
+      ? minutesTasks.filter(t => t.assignee === 'self')
+      : minutesTasks;
+
+    // Update count
+    const checked = minutesTasks.filter(t => t.checked).length;
+    document.getElementById('minutesCount').textContent =
+      `${minutesTasks.length} 件抽出　｜　選択中: ${checked} 件`;
+
+    if (!visible.length) {
+      list.innerHTML = '<p style="color:#bbb;font-size:0.82rem;padding:8px 4px;">表示するタスクがありません</p>';
+      return;
+    }
+
+    visible.forEach(task => {
+      const row = document.createElement('div');
+      row.className = 'minutes-task-item' + (task.assignee === 'other' ? ' other-assignee' : '');
+
+      // Checkbox
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'minutes-task-cb';
+      cb.checked = task.checked;
+      cb.addEventListener('change', e => {
+        task.checked = e.target.checked;
+        updateMinutesCount();
+      });
+
+      // Editable text
+      const span = document.createElement('span');
+      span.className = 'minutes-task-text';
+      span.contentEditable = 'true';
+      span.textContent = task.text;
+      span.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); span.blur(); } });
+      span.addEventListener('blur', () => { task.text = span.textContent.trim() || task.text; span.textContent = task.text; });
+
+      // Assignee select
+      const assignSel = document.createElement('select');
+      assignSel.className = 'minutes-select minutes-assignee-select';
+      [['self','自分'], ['other','他の人'], ['tbd','未定']].forEach(([v, l]) => {
+        const o = document.createElement('option');
+        o.value = v; o.textContent = l;
+        if (task.assignee === v) o.selected = true;
+        assignSel.appendChild(o);
+      });
+      assignSel.addEventListener('change', e => {
+        task.assignee = e.target.value;
+        if (task.assignee === 'other') { task.checked = false; cb.checked = false; }
+        row.classList.toggle('other-assignee', task.assignee === 'other');
+        updateMinutesCount();
+        if (minutesFilterActive) renderMinutesPreview();
+      });
+
+      // Day select
+      const daySel = document.createElement('select');
+      daySel.className = 'minutes-select minutes-day-select';
+      [['mon','月曜'],['tue','火曜'],['wed','水曜'],['thu','木曜'],['fri','金曜']].forEach(([v, l]) => {
+        const o = document.createElement('option');
+        o.value = v; o.textContent = l;
+        if (task.day === v) o.selected = true;
+        daySel.appendChild(o);
+      });
+      daySel.addEventListener('change', e => { task.day = e.target.value; });
+
+      // Delete button
+      const delBtn = document.createElement('button');
+      delBtn.className = 'minutes-delete-btn';
+      delBtn.textContent = '×';
+      delBtn.title = '削除';
+      delBtn.addEventListener('click', () => {
+        minutesTasks = minutesTasks.filter(t => t.id !== task.id);
+        if (!minutesTasks.length) { document.getElementById('minutesPreview').style.display = 'none'; return; }
+        renderMinutesPreview();
+      });
+
+      row.append(cb, span, assignSel, daySel, delBtn);
+      list.appendChild(row);
+    });
+  }
+
+  function updateMinutesCount() {
+    const checked = minutesTasks.filter(t => t.checked).length;
+    document.getElementById('minutesCount').textContent =
+      `${minutesTasks.length} 件抽出　｜　選択中: ${checked} 件`;
+  }
+
+  function toggleMinutesFilter() {
+    minutesFilterActive = !minutesFilterActive;
+    document.getElementById('minutesFilterBtn').classList.toggle('active', minutesFilterActive);
+    renderMinutesPreview();
+  }
+
+  function clearMinutes() {
+    document.getElementById('minutesInput').value = '';
+    document.getElementById('minutesEmptyMsg').style.display = 'none';
+    document.getElementById('minutesPreview').style.display = 'none';
+    minutesTasks = [];
+    minutesFilterActive = false;
+    document.getElementById('minutesFilterBtn').classList.remove('active');
+  }
+
+  function addMinutesTasks() {
+    const toAdd = minutesTasks.filter(t => t.checked);
+    if (!toAdd.length) {
+      const btn = document.getElementById('minutesAddBtn');
+      btn.textContent = '⚠ チェックされたタスクがありません';
+      setTimeout(() => { btn.textContent = '＋ チェック済みをTODOに追加'; }, 1800);
+      return;
+    }
+
+    toAdd.forEach((task, i) => {
+      const id = Date.now().toString(36) + '_mt' + i;
+      if (!weekTasks[task.day]) weekTasks[task.day] = [];
+      weekTasks[task.day].push({ id, text: task.text });
+    });
+
+    calendarLoaded = true;
+    const statusEl2 = document.getElementById('calBtnStatus');
+    if (statusEl2) statusEl2.style.display = 'none';
+    render();
+    minutesTasks = [];
+    document.getElementById('minutesPreview').style.display = 'none';
+    document.getElementById('minutesInput').value = '';
+
+    const btn = document.getElementById('minutesAddBtn');
+    btn.textContent = `✓ ${toAdd.length}件をTODOに追加しました`;
+    btn.style.background = 'linear-gradient(90deg, #388e3c, #66bb6a)';
+    setTimeout(() => {
+      btn.textContent = '＋ チェック済みをTODOに追加';
+      btn.style.background = '';
+    }, 2200);
+
+    // 週次TODOタブに切り替えてトップへ
+    const tabBtn = document.querySelector('.tab-btn[data-tab="tab-todo"]');
+    if (tabBtn) tabBtn.click();
+  }
+
+  // ---- Report Generation ----
+  const DAY_NAMES_JP = ['日','月','火','水','木','金','土'];
+  const SEP = '━━━━━━━━━━━━━━━';
+
+  function fmtReportDate(d) {
+    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${DAY_NAMES_JP[d.getDay()]}）`;
+  }
+
+  function openNippoModal() {
+    document.getElementById('reportInputStep').style.display = '';
+    document.getElementById('reportOutputStep').style.display = 'none';
+    document.getElementById('reportMemoInput').value = '';
+    document.getElementById('reportModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('reportMemoInput').focus(), 50);
+  }
+
+  function openShuppoModal() {
+    document.getElementById('reportModalTitle').textContent = '📊 週報';
+    document.getElementById('reportOutput').value = buildShuppo();
+    document.getElementById('reportInputStep').style.display = 'none';
+    document.getElementById('reportOutputStep').style.display = '';
+    document.getElementById('copyBtn').textContent = '📋 コピー';
+    document.getElementById('reportModal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('reportModal').style.display = 'none';
+  }
+
+  function generateNippo() {
+    const memo = document.getElementById('reportMemoInput').value.trim();
+    document.getElementById('reportModalTitle').textContent = '📋 日報';
+    document.getElementById('reportOutput').value = buildNippo(memo);
+    document.getElementById('reportInputStep').style.display = 'none';
+    document.getElementById('reportOutputStep').style.display = '';
+    document.getElementById('copyBtn').textContent = '📋 コピー';
+  }
+
+  function copyReport() {
+    const text = document.getElementById('reportOutput').value;
+    const btn = document.getElementById('copyBtn');
+    const fallback = () => {
+      const ta = document.getElementById('reportOutput');
+      ta.select();
+      ta.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+    };
+    (navigator.clipboard ? navigator.clipboard.writeText(text).catch(fallback) : Promise.resolve(fallback()))
+      .then(() => {
+        btn.textContent = '✓ コピーしました！';
+        btn.style.background = 'linear-gradient(90deg, #388e3c, #66bb6a)';
+        setTimeout(() => {
+          btn.textContent = '📋 コピー';
+          btn.style.background = '';
+        }, 2200);
+      });
+  }
+
+  function buildNippo(memo) {
+    const today = new Date();
+    const todayDay    = DAYS.find(d => d.today);
+    const todayIdx    = DAYS.findIndex(d => d.today);
+    const tomorrowDay = todayIdx >= 0 && todayIdx < DAYS.length - 1 ? DAYS[todayIdx + 1] : null;
+    const checked     = getCheckedState();
+
+    const doneTasks = todayDay
+      ? (weekTasks[todayDay.key] || []).filter(t => !deletedTaskIds.has(t.id) && checked[t.id]).map(t => t.text)
+      : [];
+    const tmrTasks = tomorrowDay
+      ? (weekTasks[tomorrowDay.key] || []).filter(t => !deletedTaskIds.has(t.id)).map(t => t.text)
+      : [];
+
+    return [
+      SEP,
+      `📋 ${fmtReportDate(today)} 日報`,
+      SEP,
+      '',
+      '✅ 本日の対応',
+      ...(doneTasks.length ? doneTasks.map(t => `・${t}`) : ['・（完了タスクなし）']),
+      '',
+      '📝 作業メモ',
+      memo || '（なし）',
+      '',
+      '📅 明日の予定',
+      ...(tmrTasks.length ? tmrTasks.map(t => `・${t}`) : ['・（明日の予定なし）']),
+      SEP
+    ].join('\n');
+  }
+
+  function buildShuppo() {
+    const s       = getState();
+    const ks      = getKeymanState();
+    const checked = getCheckedState();
+    const now     = new Date();
+
+    const wStart = DAYS[0].date;
+    const wEnd   = DAYS[DAYS.length - 1].date;
+    const weekLabel = `${now.getFullYear()}年${wStart}〜${wEnd}週`;
+
+    const lines = [SEP, `📊 ${weekLabel}　週報`, SEP, ''];
+
+    lines.push('✅ 今週の完了タスク');
+    let anyDone = false;
+    DAYS.forEach(d => {
+      const done = (weekTasks[d.key] || []).filter(t => !deletedTaskIds.has(t.id) && checked[t.id]);
+      if (done.length) {
+        lines.push(`【${d.label}（${d.date}）】`);
+        done.forEach(t => lines.push(`・${t.text}`));
+        anyDone = true;
+      }
+    });
+    if (!anyDone) lines.push('・（完了タスクなし）');
+    lines.push('');
+
+    // 🚀 プロジェクト進捗
+    lines.push('🚀 プロジェクト進捗');
+    PROJECTS.forEach(p => {
+      const msTotal = p.milestones.length;
+      const msDone  = p.milestones.filter((_, i) => s[p.key + '_ms_' + i]).length;
+      if (msTotal) {
+        const pct = Math.round(msDone / msTotal * 100);
+        lines.push(`・${p.name}：マイルストーン ${msDone}/${msTotal} 完了（${pct}%）`);
+      } else {
+        lines.push(`・${p.name}：進行中`);
+      }
+    });
+    lines.push('');
+
+    // 🤝 キーマン連絡状況（今週連絡済み）
+    lines.push('🤝 キーマン連絡状況');
+    const parseD = str => { const [y,m,d] = str.split('-').map(Number); return new Date(y,m-1,d); };
+    const [wm0, wd0] = DAYS[0].date.split('/').map(Number);
+    const [wm1, wd1] = DAYS[DAYS.length-1].date.split('/').map(Number);
+    const weekMin = new Date(now.getFullYear(), wm0-1, wd0);
+    const weekMax = new Date(now.getFullYear(), wm1-1, wd1);
+    const contacted = KEYMANS.filter(km => {
+      const last = ks[km.key + '_last'];
+      if (!last) return false;
+      const d = parseD(last);
+      return d >= weekMin && d <= weekMax;
+    });
+    if (contacted.length) {
+      contacted.forEach(km => {
+        const last = ks[km.key + '_last'];
+        lines.push(`・${km.name}（${km.company}）：${formatJpDate(last)} 連絡済み`);
+      });
+    } else {
+      lines.push('・今週の連絡なし');
+    }
+    lines.push('');
+
+    // 📅 来週の予定
+    lines.push('📅 来週の予定');
+    lines.push('・来週分未入力');
+    lines.push('');
+    lines.push(SEP);
+
+    return lines.join('\n');
+  }
+
+  // ---- Google Calendar ----
+  let _gsiTokenClient = null;
+  let _calAccessToken = null;
+
+  const CAL_DAY_MAP = [null, 'mon', 'tue', 'wed', 'thu', 'fri', null]; // Sun=0
+
+  // ============================================================
+  // デバッグ用ログ（コンソールに色付きで出力）
+  // ============================================================
+  function _calLog(label, data) {
+    console.group('%c[Calendar Debug] ' + label, 'color:#4f8ef7;font-weight:bold;font-size:12px');
+    if (data !== undefined) console.log(data);
+    console.groupEnd();
+  }
+  function _calError(label, data) {
+    console.group('%c[Calendar ERROR] ' + label, 'color:#e53935;font-weight:bold;font-size:12px');
+    if (data !== undefined) console.error(data);
+    console.groupEnd();
+  }
+
+  function refreshCalendar() {
+    _calLog('① ボタンクリック', {
+      client_id:    GOOGLE_CLIENT_ID,
+      page_origin:  window.location.origin,
+      page_href:    window.location.href,
+      gsi_loaded:   !!(window.google && window.google.accounts && window.google.accounts.oauth2),
+      token_exists: !!_calAccessToken,
+    });
+
+    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+      _calError('GOOGLE_CLIENT_ID 未設定');
+      alert('GOOGLE_CLIENT_ID を設定してください');
+      return;
+    }
+    _startCalendarAuth();
+  }
+
+  function _startCalendarAuth() {
+    if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+      _calLog('② GSIライブラリ待ち…', 'window.google=' + typeof window.google);
+      setTimeout(_startCalendarAuth, 400);
+      return;
+    }
+
+    if (!_gsiTokenClient) {
+      _calLog('② initTokenClient 呼び出し', {
+        client_id: GOOGLE_CLIENT_ID,
+        scope:     'https://www.googleapis.com/auth/calendar.readonly',
+        '推定OAuth2 URL': [
+          'https://accounts.google.com/o/oauth2/v2/auth',
+          '  ?response_type=token',
+          '  &client_id=' + GOOGLE_CLIENT_ID,
+          '  &scope=' + encodeURIComponent('https://www.googleapis.com/auth/calendar.readonly'),
+          '  &redirect_uri=storagerelay%3A%2F%2Fhttps%2F' + encodeURIComponent(window.location.hostname),
+          '  &origin=' + encodeURIComponent(window.location.origin),
+        ].join('\n'),
+        'Cloud Console確認事項': '「承認済みJavaScriptオリジン」に下記が登録されているか確認\n  → ' + window.location.origin,
+      });
+      _gsiTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/calendar.readonly',
+        callback: _handleCalToken,
+      });
+    }
+
+    if (_calAccessToken) {
+      _calLog('② トークン既存 → データ取得へ');
+      _loadCalendarData();
+    } else {
+      _calLog('② requestAccessToken 呼び出し', {
+        prompt: '(未指定)',
+        note:   'ここでGoogleのポップアップが開く。エラー時は③コールバックに返る',
+      });
+      _gsiTokenClient.requestAccessToken();
+    }
+  }
+
+  function _handleCalToken(resp) {
+    // コールバック全内容をログ出力
+    const safeResp = {
+      error:             resp.error             || '(なし)',
+      error_description: resp.error_description || '(なし)',
+      error_uri:         resp.error_uri         || '(なし)',
+      token_type:        resp.token_type        || '(なし)',
+      expires_in:        resp.expires_in        || '(なし)',
+      scope:             resp.scope             || '(なし)',
+      access_token:      resp.access_token ? resp.access_token.slice(0, 12) + '...' : '(なし)',
+    };
+
+    if (resp.error) {
+      _calError('③ 認証コールバック：エラー', {
+        ...safeResp,
+        '原因の手がかり': {
+          'invalid_request':       '「承認済みJavaScriptオリジン」に ' + window.location.origin + ' が未登録の可能性',
+          'invalid_client':        'client_id が間違っている、またはOAuthクライアントが無効',
+          'redirect_uri_mismatch': 'JavaScriptオリジンの登録漏れ（redirect_uriではなくJSオリジン欄を確認）',
+          'access_denied':         'ユーザーが同意を拒否（正常なキャンセル）',
+        },
+      });
+      if (resp.error === 'access_denied') return;
+      alert('認証エラー: ' + resp.error + (resp.error_description ? '\n' + resp.error_description : ''));
+      return;
+    }
+
+    _calLog('③ 認証コールバック：成功', {
+      ...safeResp,
+      有効期限まで: (resp.expires_in || 3600) + '秒 (' + new Date(Date.now() + (resp.expires_in||3600)*1000).toLocaleTimeString() + ' まで)',
+    });
+
+    _calAccessToken = resp.access_token;
+    const expiresIn = (resp.expires_in || 3600) * 1000;
+    setTimeout(() => {
+      _calLog('トークン失効 → クリア', '次回取得時に再認証');
+      _calAccessToken = null;
+    }, expiresIn - 60000);
+    _loadCalendarData();
+  }
+
+  async function _loadCalendarData() {
+    try {
+      const monday = getWeekMonday(currentWeekOffset);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23, 59, 59, 999);
+
+      const params = new URLSearchParams({
+        timeMin: monday.toISOString(),
+        timeMax: sunday.toISOString(),
+        singleEvents: 'true',
+        orderBy: 'startTime',
+        maxResults: '100',
+      });
+
+      const apiUrl = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?' + params;
+      _calLog('④ Calendar API リクエスト', {
+        url:         apiUrl,
+        週:          monday.toLocaleDateString('ja-JP') + ' 〜 ' + sunday.toLocaleDateString('ja-JP'),
+        weekOffset:  currentWeekOffset,
+        token_prefix: _calAccessToken.slice(0, 12) + '...',
+      });
+
+      const res = await fetch(apiUrl, { headers: { Authorization: 'Bearer ' + _calAccessToken } });
+
+      _calLog('④ Calendar API レスポンス', { status: res.status, ok: res.ok });
+
+      if (res.status === 401) {
+        _calError('④ 401 Unauthorized', 'トークン期限切れ → 再認証 (prompt:consent)');
+        _calAccessToken = null;
+        _gsiTokenClient.requestAccessToken({ prompt: 'consent' });
+        return;
+      }
+      if (!res.ok) {
+        const body = await res.text();
+        _calError('④ APIエラー', { status: res.status, body: body.slice(0, 400) });
+        throw new Error('HTTP ' + res.status);
+      }
+
+      const data = await res.json();
+      const fmtTime = d => String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+
+      weekTasks = { mon: [], tue: [], wed: [], thu: [], fri: [] };
+      deletedTaskIds.clear();
+
+      (data.items || []).forEach((ev, i) => {
+        const dateStr = ev.start.dateTime || ev.start.date;
+        const d = new Date(dateStr);
+        const dayKey = CAL_DAY_MAP[d.getDay()];
+        if (!dayKey) return;
+
+        const isAllDay = !!ev.start.date;
+        const timeStr = isAllDay ? '終日' : fmtTime(new Date(ev.start.dateTime)) + '〜' + fmtTime(new Date(ev.end.dateTime));
+        const title = ev.summary || '（タイトルなし）';
+        const text  = isAllDay ? title : timeStr + ' ' + title;
+
+        weekTasks[dayKey].push({ id: ev.id || ('ev_' + i), text });
+      });
+
+      _calLog('⑤ 取得完了', {
+        イベント総数: (data.items || []).length,
+        月: weekTasks.mon.length + '件',
+        火: weekTasks.tue.length + '件',
+        水: weekTasks.wed.length + '件',
+        木: weekTasks.thu.length + '件',
+        金: weekTasks.fri.length + '件',
+      });
+
+      calendarLoaded = true;
+      const statusEl = document.getElementById('calBtnStatus');
+      if (statusEl) statusEl.style.display = 'none';
+      render();
+
+    } catch (err) {
+      _calError('⑤ 例外発生', { message: err.message, stack: err.stack });
+      alert('カレンダーの取得に失敗しました: ' + err.message);
+    }
+  }
+
+  // ---- Task Link Storage ----
+  function getLinkStorage() {
+    try { return JSON.parse(localStorage.getItem('task_links') || '{}'); } catch { return {}; }
+  }
+  function saveLinkStorage(s) { localStorage.setItem('task_links', JSON.stringify(s)); }
+  function getTaskLinks(taskId) { return getLinkStorage()[taskId] || []; }
+  function setTaskLinks(taskId, links) {
+    const s = getLinkStorage();
+    if (links.length) s[taskId] = links; else delete s[taskId];
+    saveLinkStorage(s);
+  }
+
+  // ---- Link Modal ----
+  let _linkModalTaskId = null;
+
+  function openLinkModal(taskId, taskText) {
+    _linkModalTaskId = taskId;
+    document.getElementById('linkModalTaskName').textContent = taskText;
+    document.getElementById('linkUrlInput').value = '';
+    document.getElementById('linkNameInput').value = '';
+    renderLinkList();
+    document.getElementById('linkModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('linkUrlInput').focus(), 50);
+  }
+
+  function closeLinkModal() {
+    document.getElementById('linkModal').style.display = 'none';
+    _linkModalTaskId = null;
+  }
+
+  function renderLinkList() {
+    const ul = document.getElementById('linkList');
+    const links = _linkModalTaskId ? getTaskLinks(_linkModalTaskId) : [];
+    ul.innerHTML = '';
+    if (!links.length) {
+      ul.innerHTML = '<li style="color:#bbb;font-size:0.82rem;padding:8px 4px;">まだリンクが登録されていません</li>';
+      return;
+    }
+    links.forEach((link, i) => {
+      const li = document.createElement('li');
+      li.className = 'link-list-item';
+      const shortUrl = link.url.length > 36 ? link.url.slice(0, 36) + '…' : link.url;
+      li.innerHTML = `
+        <span class="link-item-name">${escapeHtml(link.name)}</span>
+        <span class="link-item-url">${escapeHtml(shortUrl)}</span>
+        <button class="link-item-open" data-href="${escapeHtml(link.url)}">開く</button>
+        <button class="link-delete-btn" data-idx="${i}">×</button>
+      `;
+      li.querySelector('.link-item-open').addEventListener('click', () => window.open(link.url, '_blank', 'noopener'));
+      li.querySelector('.link-delete-btn').addEventListener('click', () => {
+        const arr = getTaskLinks(_linkModalTaskId);
+        arr.splice(i, 1);
+        setTaskLinks(_linkModalTaskId, arr);
+        renderLinkList();
+        refreshLinkButton(_linkModalTaskId);
+      });
+      ul.appendChild(li);
+    });
+  }
+
+  function addTaskLink() {
+    let url = document.getElementById('linkUrlInput').value.trim();
+    if (!url) { document.getElementById('linkUrlInput').focus(); return; }
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    const name = document.getElementById('linkNameInput').value.trim() || url;
+    const arr = getTaskLinks(_linkModalTaskId);
+    arr.push({ url, name });
+    setTaskLinks(_linkModalTaskId, arr);
+    document.getElementById('linkUrlInput').value = '';
+    document.getElementById('linkNameInput').value = '';
+    renderLinkList();
+    refreshLinkButton(_linkModalTaskId);
+    document.getElementById('linkUrlInput').focus();
+  }
+
+  // Enterキーで追加
+  document.getElementById('linkUrlInput').addEventListener('keydown', e => { if (e.key === 'Enter') addTaskLink(); });
+  document.getElementById('linkNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') addTaskLink(); });
+
+  function refreshLinkButton(taskId) {
+    const btn = document.querySelector(`.link-task-btn[data-taskid="${CSS.escape(taskId)}"]`);
+    if (!btn) return;
+    const links = getTaskLinks(taskId);
+    const hasLinks = links.length > 0;
+    btn.classList.toggle('has-links', hasLinks);
+    const li = btn.closest('.task-item');
+    if (!li) return;
+    const wrap = li.querySelector('.task-label-wrap');
+    if (!wrap) return;
+    let chips = wrap.querySelector('.task-link-chips');
+    if (!chips) {
+      chips = document.createElement('div');
+      chips.className = 'task-link-chips';
+      wrap.appendChild(chips);
+    }
+    chips.innerHTML = links.map(l =>
+      `<a class="task-link-chip" href="${escapeHtml(l.url)}" target="_blank" rel="noopener">🔗 ${escapeHtml(l.name || l.url)}</a>`
+    ).join('');
+  }
+
+  // ---- Week Navigation ----
+  function updateWeekDisplay() {
+    const monday = getWeekMonday(currentWeekOffset);
+    const friday = new Date(monday);
+    friday.setDate(monday.getDate() + 4);
+    const y = monday.getFullYear();
+    const label = `${y}年${monday.getMonth()+1}月${monday.getDate()}日〜${friday.getMonth()+1}月${friday.getDate()}日`;
+    document.getElementById('weekDateLabel').textContent = label;
+    const todayBtn = document.getElementById('weekTodayBtn');
+    if (todayBtn) todayBtn.classList.toggle('current-week', currentWeekOffset === 0);
+  }
+
+  function changeWeek(delta) {
+    currentWeekOffset += delta;
+    DAYS = buildDays(currentWeekOffset);
+    weekTasks = { mon: [], tue: [], wed: [], thu: [], fri: [] };
+    deletedTaskIds.clear();
+    calendarLoaded = false;
+    updateWeekDisplay();
+    if (_calAccessToken) {
+      _loadCalendarData();
+    } else {
+      render();
+    }
+  }
+
+  function goToCurrentWeek() {
+    if (currentWeekOffset === 0) return;
+    currentWeekOffset = 0;
+    DAYS = buildDays(0);
+    weekTasks = { mon: [], tue: [], wed: [], thu: [], fri: [] };
+    deletedTaskIds.clear();
+    calendarLoaded = false;
+    updateWeekDisplay();
+    if (_calAccessToken) {
+      _loadCalendarData();
+    } else {
+      render();
+    }
+  }
+
+  updateWeekDisplay();
+  render();
+  renderProjects();
+  renderRoutines();
+  renderKeymans();
+  initTabs();
+  updateTabGlow();
+
+  // ============================================================
+  // ---- Routine CRUD ----
+  // ============================================================
+  let _editRoutineKey = null;
+
+  function openRoutineModal(editKey) {
+    _editRoutineKey = editKey || null;
+    const isEdit = !!editKey;
+    document.getElementById('routineModalTitle').textContent = isEdit ? '📅 ルーティン編集' : '📅 ルーティン追加';
+    document.getElementById('rmTitle').value = '';
+    document.getElementById('rmDueDay').value = '20';
+    document.getElementById('rmTitle').style.borderColor = '';
+    document.getElementById('rmSteps').innerHTML = '';
+
+    if (isEdit) {
+      const r = ROUTINES.find(r => r.key === editKey);
+      if (r) {
+        document.getElementById('rmTitle').value  = r.title  || '';
+        document.getElementById('rmDueDay').value = r.dueDay || 20;
+        (r.steps || []).forEach(step => addRoutineStep(step));
+      }
+    } else {
+      addRoutineStep();
+    }
+    document.getElementById('routineModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('rmTitle').focus(), 50);
+  }
+
+  function closeRoutineModal() {
+    document.getElementById('routineModal').style.display = 'none';
+  }
+
+  function addRoutineStep(stepData) {
+    const container = document.getElementById('rmSteps');
+    const el = document.createElement('div');
+    el.className = 'rm-step-block';
+    const lv = (stepData && stepData.label) ? stepData.label.replace(/"/g, '&quot;') : '';
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <input class="pm-input rm-step-label" type="text" value="${lv}" placeholder="ステップ名（例：STEP1 準備）" style="flex:1;">
+        <button class="pm-list-del rm-step-del" type="button">×</button>
+      </div>
+      <div class="pm-list-wrap rm-task-list"></div>
+      <button class="pm-list-add rm-add-task" type="button" style="margin-top:4px;">＋ タスク追加</button>
+    `;
+    el.querySelector('.rm-step-del').addEventListener('click', () => el.remove());
+    el.querySelector('.rm-add-task').addEventListener('click', () => addStepTask(el, ''));
+    if (stepData && stepData.tasks) stepData.tasks.forEach(t => addStepTask(el, t));
+    container.appendChild(el);
+    if (!stepData) el.querySelector('.rm-step-label').focus();
+  }
+
+  function addStepTask(stepEl, value) {
+    const list = stepEl.querySelector('.rm-task-list');
+    const row = document.createElement('div');
+    row.className = 'pm-list-row';
+    const sv = (value || '').replace(/"/g, '&quot;');
+    row.innerHTML = `<input class="pm-list-input rm-task-input" type="text" value="${sv}" placeholder="タスク内容"><button class="pm-list-del" type="button">×</button>`;
+    row.querySelector('.pm-list-del').addEventListener('click', () => row.remove());
+    list.appendChild(row);
+    if (!value) row.querySelector('.rm-task-input').focus();
+  }
+
+  function saveRoutine() {
+    const title = document.getElementById('rmTitle').value.trim();
+    if (!title) {
+      document.getElementById('rmTitle').style.borderColor = '#e53935';
+      document.getElementById('rmTitle').focus();
+      return;
+    }
+    const dueDay = Math.max(1, Math.min(31, parseInt(document.getElementById('rmDueDay').value) || 20));
+    const steps = [...document.querySelectorAll('#rmSteps .rm-step-block')].map((el, si) => ({
+      key:   'step' + (si + 1),
+      label: el.querySelector('.rm-step-label').value.trim() || `STEP${si + 1}`,
+      tasks: [...el.querySelectorAll('.rm-task-input')].map(i => i.value.trim()).filter(Boolean),
+    }));
+
+    if (_editRoutineKey) {
+      const idx = ROUTINES.findIndex(r => r.key === _editRoutineKey);
+      if (idx >= 0) ROUTINES[idx] = Object.assign({}, ROUTINES[idx], { title, dueDay, steps });
+    } else {
+      ROUTINES.push({ key: 'routine_' + Date.now().toString(36), title, dueDay, steps });
+    }
+    saveRoutinesData(ROUTINES);
+    closeRoutineModal();
+    renderRoutines();
+    updateTabGlow();
+  }
+
+  function deleteRoutine(key) {
+    if (!confirm('このルーティンを削除しますか？')) return;
+    ROUTINES = ROUTINES.filter(r => r.key !== key);
+    saveRoutinesData(ROUTINES);
+    renderRoutines();
+    updateTabGlow();
+  }
+
+  // ============================================================
+  // ---- Project CRUD ----
+  // ============================================================
+  let _editProjectKey = null;
+
+  function dateIsoToJp(iso) {
+    if (!iso) return '未定';
+    const [y, m, d] = iso.split('-').map(Number);
+    return `${y}年${m}月${d}日`;
+  }
+
+  function dateJpToIso(jp) {
+    if (!jp || jp === '未定') return '';
+    const m = jp.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    if (!m) return '';
+    return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  }
+
+  function addPmListRow(containerId, value) {
+    const container = document.getElementById(containerId);
+    const row = document.createElement('div');
+    row.className = 'pm-list-row';
+    const safeVal = (value || '').replace(/"/g, '&quot;');
+    row.innerHTML = `<input class="pm-list-input" type="text" value="${safeVal}" placeholder="入力..."><button class="pm-list-del" type="button">×</button>`;
+    row.querySelector('.pm-list-del').addEventListener('click', () => row.remove());
+    container.appendChild(row);
+    if (!value) row.querySelector('.pm-list-input').focus();
+  }
+
+  function openProjModal(editKey) {
+    _editProjectKey = editKey || null;
+    const isEdit = !!editKey;
+    document.getElementById('projModalTitle').textContent = isEdit ? '📁 プロジェクト編集' : '📁 プロジェクト追加';
+    document.getElementById('pmName').value = '';
+    document.getElementById('pmStatus').value = 'active';
+    document.getElementById('pmGoal').value = '';
+    document.getElementById('pmDeadline').value = '';
+    document.getElementById('pmNotes').value = '';
+    document.getElementById('pmMilestones').innerHTML = '';
+    document.getElementById('pmActions').innerHTML = '';
+    document.getElementById('pmName').style.borderColor = '';
+
+    if (isEdit) {
+      const p = PROJECTS.find(p => p.key === editKey);
+      if (p) {
+        document.getElementById('pmName').value      = p.name || '';
+        document.getElementById('pmStatus').value    = p.status || 'active';
+        document.getElementById('pmGoal').value      = p.goal || '';
+        document.getElementById('pmDeadline').value  = dateJpToIso(p.deadline);
+        document.getElementById('pmNotes').value     = p.notes || '';
+        (p.milestones || []).forEach(m => addPmListRow('pmMilestones', m));
+        (p.nextActions || []).forEach(a => addPmListRow('pmActions', a));
+      }
+    }
+    document.getElementById('projModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('pmName').focus(), 50);
+  }
+
+  function closeProjModal() {
+    document.getElementById('projModal').style.display = 'none';
+  }
+
+  function saveProject() {
+    const name = document.getElementById('pmName').value.trim();
+    if (!name) {
+      document.getElementById('pmName').style.borderColor = '#e53935';
+      document.getElementById('pmName').focus();
+      return;
+    }
+    const statusVal   = document.getElementById('pmStatus').value;
+    const statusLabel = { active: '進行中', hold: '保留', done: '完了' }[statusVal] || '進行中';
+    const deadlineRaw = document.getElementById('pmDeadline').value;
+    const deadline    = deadlineRaw ? dateIsoToJp(deadlineRaw) : '未定';
+    const goal        = document.getElementById('pmGoal').value.trim();
+    const notes       = document.getElementById('pmNotes').value.trim();
+    const milestones  = [...document.querySelectorAll('#pmMilestones .pm-list-input')]
+      .map(el => el.value.trim()).filter(Boolean);
+    const nextActions = [...document.querySelectorAll('#pmActions .pm-list-input')]
+      .map(el => el.value.trim()).filter(Boolean);
+    const FILLS = ['proj-fill-0','proj-fill-1','proj-fill-2','proj-fill-3','proj-fill-4','proj-fill-5'];
+
+    if (_editProjectKey) {
+      const idx = PROJECTS.findIndex(p => p.key === _editProjectKey);
+      if (idx >= 0) {
+        PROJECTS[idx] = Object.assign({}, PROJECTS[idx],
+          { name, status: statusVal, statusLabel, deadline, goal, notes, milestones, nextActions });
+      }
+    } else {
+      const key = 'proj_' + Date.now().toString(36);
+      const fillClass = FILLS[PROJECTS.length % FILLS.length];
+      PROJECTS.push({ key, name, status: statusVal, statusLabel, deadline, fillClass, goal, notes, milestones, nextActions });
+    }
+    saveProjectsData(PROJECTS);
+    closeProjModal();
+    renderProjects();
+    updateTabGlow();
+  }
+
+  function deleteProject(key) {
+    if (!confirm('このプロジェクトを削除しますか？')) return;
+    PROJECTS = PROJECTS.filter(p => p.key !== key);
+    saveProjectsData(PROJECTS);
+    renderProjects();
+    updateTabGlow();
+  }
+
+  // ============================================================
+  // ---- Keyman CRUD ----
+  // ============================================================
+  let _editKeymanKey = null;
+
+  function openKeymanModal(editKey) {
+    _editKeymanKey = editKey || null;
+    const isEdit = !!editKey;
+    document.getElementById('keymanModalTitle').textContent = isEdit ? '👤 キーマン編集' : '👤 キーマン追加';
+    document.getElementById('kmName').value    = '';
+    document.getElementById('kmCompany').value = '';
+    document.getElementById('kmNote').value    = '';
+    document.getElementById('kmCycle').value   = '14';
+    document.getElementById('kmName').style.borderColor = '';
+
+    if (isEdit) {
+      const km = KEYMANS.find(k => k.key === editKey);
+      if (km) {
+        document.getElementById('kmName').value    = km.name || '';
+        document.getElementById('kmCompany').value = km.company || '';
+        document.getElementById('kmNote').value    = km.note || '';
+        document.getElementById('kmCycle').value   = km.cycle || 14;
+      }
+    }
+    document.getElementById('keymanEditModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('kmName').focus(), 50);
+  }
+
+  function closeKeymanModal() {
+    document.getElementById('keymanEditModal').style.display = 'none';
+  }
+
+  function saveKeyman() {
+    const name = document.getElementById('kmName').value.trim();
+    if (!name) {
+      document.getElementById('kmName').style.borderColor = '#e53935';
+      document.getElementById('kmName').focus();
+      return;
+    }
+    const company = document.getElementById('kmCompany').value.trim();
+    const note    = document.getElementById('kmNote').value.trim();
+    const cycle   = Math.max(1, parseInt(document.getElementById('kmCycle').value) || 14);
+
+    if (_editKeymanKey) {
+      const idx = KEYMANS.findIndex(k => k.key === _editKeymanKey);
+      if (idx >= 0) {
+        KEYMANS[idx] = Object.assign({}, KEYMANS[idx], { name, company, note, cycle });
+      }
+    } else {
+      const key = 'km_' + Date.now().toString(36);
+      KEYMANS.push({ key, name, company, note, cycle });
+    }
+    saveKeymansData(KEYMANS);
+    closeKeymanModal();
+    renderKeymans();
+    updateTabGlow();
+  }
+
+  function deleteKeyman(key) {
+    if (!confirm('このキーマンを削除しますか？')) return;
+    KEYMANS = KEYMANS.filter(k => k.key !== key);
+    saveKeymansData(KEYMANS);
+    renderKeymans();
+    updateTabGlow();
+  }
+
+  // ---- タブ切り替え ----
+  function initTabs() {
+    const tabBtns = document.querySelectorAll('.tab-btn[data-tab]');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = btn.dataset.tab;
+        // ボタンのactiveを切り替え
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // セクションの表示を切り替え
+        document.querySelectorAll('.tab-section').forEach(sec => sec.classList.remove('active'));
+        const section = document.getElementById(tabId);
+        if (section) section.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+  }
+
+  // ---- タブ発光判定 ----
+  function updateTabGlow() {
+    const now = new Date();
+    const todayStr = todayLocalStr();
+    const todayDate = parseLocalDate(todayStr);
+
+    // 月次ルーティン：いずれかのルーティンが期限5日以内なら発光
+    const monthlyGlow = ROUTINES.some(r => {
+      const dl = getRoutineDeadline(r);
+      const diff = Math.ceil((dl - now) / 864e5);
+      return diff >= 0 && diff <= 5;
+    });
+
+    // キーマン連絡：次回連絡予定日を過ぎているものがある
+    const ks = getKeymanState();
+    const keymanGlow = KEYMANS.some(km => {
+      const nextContact = ks[km.key + '_next'];
+      if (!nextContact) return false;
+      const nextDate = parseLocalDate(nextContact);
+      return nextDate < todayDate;
+    });
+
+    // プロジェクト進捗：期限まで7日以内のものがある
+    const projectGlow = PROJECTS.some(p => {
+      if (!p.deadline || p.deadline === '未定') return false;
+      // 期限文字列をパース（例：2026年6月1日、2026年9月末）
+      const m = p.deadline.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+      if (!m) return false;
+      const dl = new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
+      const diff = Math.ceil((dl - now) / (1000 * 60 * 60 * 24));
+      return diff >= 0 && diff <= 7;
+    });
+
+    // 発光適用
+    applyTabGlow('tabBtn-monthly', monthlyGlow);
+    applyTabGlow('tabBtn-keyman', keymanGlow);
+    applyTabGlow('tabBtn-project', projectGlow);
+  }
+
+  function applyTabGlow(btnId, shouldGlow) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    // 既存バッジを除去
+    const existing = btn.querySelector('.tab-badge');
+    if (existing) existing.remove();
+
+    if (shouldGlow) {
+      btn.classList.add('glow');
+      const badge = document.createElement('span');
+      badge.className = 'tab-badge';
+      badge.textContent = '！';
+      btn.appendChild(badge);
+    } else {
+      btn.classList.remove('glow');
+    }
+  }
+
+  // ---- 旧ナビゲーション：topnavボタンはタブ切り替えに委譲 ----
+  (function initTopNav() {
+    const navBtns = document.querySelectorAll('.topnav-navbtn[data-target]');
+    const tabMap = {
+      'section-todo': 'tab-todo',
+      'section-project': 'tab-project',
+      'section-monthly': 'tab-monthly',
+      'section-keyman': 'tab-keyman',
+      'section-minutes': 'tab-todo',
+    };
+    navBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = tabMap[btn.dataset.target];
+        if (!tabId) return;
+        const tabBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+        if (tabBtn) tabBtn.click();
+      });
+    });
+  })();
+</script>
+</body>
+</html>
