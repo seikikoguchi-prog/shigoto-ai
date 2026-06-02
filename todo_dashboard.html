@@ -15,6 +15,9 @@
       min-height: 100vh;
       padding: 70px 16px 24px;
     }
+    @media (max-width: 768px) {
+      body { padding-top: 120px; }
+    }
 
     header {
       text-align: center;
@@ -625,10 +628,27 @@
     .topnav-nippo   { background: linear-gradient(90deg, #56ab2f, #a8e063); color: #fff; }
     .topnav-shuppo  { background: linear-gradient(90deg, #2193b0, #6dd5ed); color: #fff; }
 
-    @media (max-width: 600px) {
-      .topnav { padding: 6px 10px; gap: 6px; }
-      .topnav-navbtn  { font-size: 0.7rem; padding: 4px 7px; }
-      .topnav-actionbtn { font-size: 0.7rem; padding: 4px 7px; }
+    @media (max-width: 768px) {
+      .topnav {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 5px 8px;
+        gap: 4px;
+        min-height: auto;
+      }
+      .topnav-links {
+        justify-content: center;
+        flex-wrap: wrap;
+        overflow-x: visible;
+        gap: 3px;
+      }
+      .topnav-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 3px;
+      }
+      .topnav-navbtn  { font-size: 0.62rem; padding: 4px 7px; }
+      .topnav-actionbtn { font-size: 0.62rem; padding: 4px 7px; }
     }
 
     .cal-not-connected {
