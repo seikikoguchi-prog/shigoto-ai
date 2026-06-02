@@ -1904,6 +1904,7 @@
   // 承認済みのJavaScriptオリジンにこのファイルのURLを登録してください
   // ============================================================
   const GOOGLE_CLIENT_ID = '310938803765-7hfeiidghc1970ur2j6ao1dbvota1nh0.apps.googleusercontent.com';
+  const ORIGIN_URL = 'https://seikikoguchi-prog.github.io';
 
   // ---- 週ナビ ----
   let currentWeekOffset = 0;
@@ -3131,7 +3132,7 @@
   function refreshCalendar() {
     _calLog('① ボタンクリック', {
       client_id:    GOOGLE_CLIENT_ID,
-      page_origin:  window.location.origin,
+      page_origin:  ORIGIN_URL,
       page_href:    window.location.href,
       gsi_loaded:   !!(window.google && window.google.accounts && window.google.accounts.oauth2),
       token_exists: !!_calAccessToken,
@@ -3161,10 +3162,10 @@
           '  ?response_type=token',
           '  &client_id=' + GOOGLE_CLIENT_ID,
           '  &scope=' + encodeURIComponent('https://www.googleapis.com/auth/calendar.readonly'),
-          '  &redirect_uri=storagerelay%3A%2F%2Fhttps%2F' + encodeURIComponent(window.location.hostname),
-          '  &origin=' + encodeURIComponent(window.location.origin),
+          '  &redirect_uri=storagerelay%3A%2F%2Fhttps%2F' + encodeURIComponent('seikikoguchi-prog.github.io'),
+          '  &origin=' + encodeURIComponent(ORIGIN_URL),
         ].join('\n'),
-        'Cloud Console確認事項': '「承認済みJavaScriptオリジン」に下記が登録されているか確認\n  → ' + window.location.origin,
+        'Cloud Console確認事項': '「承認済みJavaScriptオリジン」に下記が登録されているか確認\n  → ' + ORIGIN_URL,
       });
       _gsiTokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
@@ -3201,7 +3202,7 @@
       _calError('③ 認証コールバック：エラー', {
         ...safeResp,
         '原因の手がかり': {
-          'invalid_request':       '「承認済みJavaScriptオリジン」に ' + window.location.origin + ' が未登録の可能性',
+          'invalid_request':       '「承認済みJavaScriptオリジン」に ' + ORIGIN_URL + ' が未登録の可能性',
           'invalid_client':        'client_id が間違っている、またはOAuthクライアントが無効',
           'redirect_uri_mismatch': 'JavaScriptオリジンの登録漏れ（redirect_uriではなくJSオリジン欄を確認）',
           'access_denied':         'ユーザーが同意を拒否（正常なキャンセル）',
