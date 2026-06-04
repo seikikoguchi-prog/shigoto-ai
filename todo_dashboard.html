@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TODO ダッシュボード - 2026年5月26日週</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1666,7 +1665,7 @@
     <button class="topnav-actionbtn topnav-reload"  onclick="location.reload()">🔄 更新</button>
     <button class="topnav-actionbtn topnav-nippo"   onclick="openNippoModal()">📝 日報</button>
     <button class="topnav-actionbtn topnav-shuppo"    onclick="openShuppoModal()">📊 週報</button>
-    <button class="topnav-actionbtn topnav-calendar" id="calBtn" onclick="refreshCalendar()">📅 カレンダー取得<span id="calBtnStatus" style="font-size:0.68rem;font-weight:400;opacity:0.85;margin-left:4px;">（未連携）</span></button>
+    <button class="topnav-actionbtn topnav-calendar" id="calBtn" onclick="refreshCalendar()">📅 カレンダー取得<span id="calBtnStatus" style="font-size:0.68rem;font-weight:400;opacity:0.85;margin-left:4px;display:none;"></span></button>
   </div>
 </nav>
 
@@ -1918,13 +1917,9 @@
 
 <script>
   // ============================================================
-  // Google Calendar 連携設定
-  // Google Cloud Console でOAuth2.0クライアントIDを取得してここに貼り付け
-  // console.cloud.google.com → APIとサービス → 認証情報 → OAuth2.0クライアントID
-  // 承認済みのJavaScriptオリジンにこのファイルのURLを登録してください
+  // Google Calendar (GAS経由)
   // ============================================================
-  const GOOGLE_CLIENT_ID = '310938803765-7hfeiidghc1970ur2j6ao1dbvota1nh0.apps.googleusercontent.com';
-  const ORIGIN_URL = 'https://seikikoguchi-prog.github.io';
+  const GAS_CALENDAR_URL = 'https://script.google.com/macros/s/AKfycbzdB2KwQsm0Yonaa9oW2IMewRmEx-DfrXUvt3CWe0axDH0tl0MXWC2VoLNKS4XnDr9isg/exec';
 
   // ---- 週ナビ ----
   let currentWeekOffset = 0;
@@ -2180,7 +2175,7 @@
             <span class="day-title">${d.label} <span style="font-weight:400;color:#888;font-size:0.85em">(${d.date})</span></span>
             <span>${badge}</span>
           </div>
-          <div class="cal-not-connected">📅 カレンダー未連携</div>
+          <div class="cal-not-connected">📅 カレンダー取得ボタンを押してください</div>
         `;
         grid.appendChild(card);
         return;
@@ -3129,200 +3124,61 @@
     return lines.join('\n');
   }
 
-  // ---- Google Calendar ----
-  let _gsiTokenClient = null;
-  let _calAccessToken = null;
-
+  // ---- Google Calendar (GAS経由) ----
   const CAL_DAY_MAP = [null, 'mon', 'tue', 'wed', 'thu', 'fri', null]; // Sun=0
 
-  // ============================================================
-  // デバッグ用ログ（コンソールに色付きで出力）
-  // ============================================================
-  function _calLog(label, data) {
-    console.group('%c[Calendar Debug] ' + label, 'color:#4f8ef7;font-weight:bold;font-size:12px');
-    if (data !== undefined) console.log(data);
-    console.groupEnd();
-  }
-  function _calError(label, data) {
-    console.group('%c[Calendar ERROR] ' + label, 'color:#e53935;font-weight:bold;font-size:12px');
-    if (data !== undefined) console.error(data);
-    console.groupEnd();
-  }
-
   function refreshCalendar() {
-    _calLog('① ボタンクリック', {
-      client_id:    GOOGLE_CLIENT_ID,
-      page_origin:  ORIGIN_URL,
-      page_href:    window.location.href,
-      gsi_loaded:   !!(window.google && window.google.accounts && window.google.accounts.oauth2),
-      token_exists: !!_calAccessToken,
-    });
-
-    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
-      _calError('GOOGLE_CLIENT_ID 未設定');
-      alert('GOOGLE_CLIENT_ID を設定してください');
-      return;
-    }
-    _startCalendarAuth();
-  }
-
-  function _startCalendarAuth() {
-    if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
-      _calLog('② GSIライブラリ待ち…', 'window.google=' + typeof window.google);
-      setTimeout(_startCalendarAuth, 400);
-      return;
-    }
-
-    if (!_gsiTokenClient) {
-      _calLog('② initTokenClient 呼び出し', {
-        client_id: GOOGLE_CLIENT_ID,
-        scope:     'https://www.googleapis.com/auth/calendar.readonly',
-        '推定OAuth2 URL': [
-          'https://accounts.google.com/o/oauth2/v2/auth',
-          '  ?response_type=token',
-          '  &client_id=' + GOOGLE_CLIENT_ID,
-          '  &scope=' + encodeURIComponent('https://www.googleapis.com/auth/calendar.readonly'),
-          '  &redirect_uri=storagerelay%3A%2F%2Fhttps%2F' + encodeURIComponent('seikikoguchi-prog.github.io'),
-          '  &origin=' + encodeURIComponent(ORIGIN_URL),
-        ].join('\n'),
-        'Cloud Console確認事項': '「承認済みJavaScriptオリジン」に下記が登録されているか確認\n  → ' + ORIGIN_URL,
-      });
-      _gsiTokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/calendar.readonly',
-        callback: _handleCalToken,
-      });
-    }
-
-    if (_calAccessToken) {
-      _calLog('② トークン既存 → データ取得へ');
-      _loadCalendarData();
-    } else {
-      _calLog('② requestAccessToken 呼び出し', {
-        prompt: '(未指定)',
-        note:   'ここでGoogleのポップアップが開く。エラー時は③コールバックに返る',
-      });
-      _gsiTokenClient.requestAccessToken();
-    }
-  }
-
-  function _handleCalToken(resp) {
-    // コールバック全内容をログ出力
-    const safeResp = {
-      error:             resp.error             || '(なし)',
-      error_description: resp.error_description || '(なし)',
-      error_uri:         resp.error_uri         || '(なし)',
-      token_type:        resp.token_type        || '(なし)',
-      expires_in:        resp.expires_in        || '(なし)',
-      scope:             resp.scope             || '(なし)',
-      access_token:      resp.access_token ? resp.access_token.slice(0, 12) + '...' : '(なし)',
-    };
-
-    if (resp.error) {
-      _calError('③ 認証コールバック：エラー', {
-        ...safeResp,
-        '原因の手がかり': {
-          'invalid_request':       '「承認済みJavaScriptオリジン」に ' + ORIGIN_URL + ' が未登録の可能性',
-          'invalid_client':        'client_id が間違っている、またはOAuthクライアントが無効',
-          'redirect_uri_mismatch': 'JavaScriptオリジンの登録漏れ（redirect_uriではなくJSオリジン欄を確認）',
-          'access_denied':         'ユーザーが同意を拒否（正常なキャンセル）',
-        },
-      });
-      if (resp.error === 'access_denied') return;
-      alert('認証エラー: ' + resp.error + (resp.error_description ? '\n' + resp.error_description : ''));
-      return;
-    }
-
-    _calLog('③ 認証コールバック：成功', {
-      ...safeResp,
-      有効期限まで: (resp.expires_in || 3600) + '秒 (' + new Date(Date.now() + (resp.expires_in||3600)*1000).toLocaleTimeString() + ' まで)',
-    });
-
-    _calAccessToken = resp.access_token;
-    const expiresIn = (resp.expires_in || 3600) * 1000;
-    setTimeout(() => {
-      _calLog('トークン失効 → クリア', '次回取得時に再認証');
-      _calAccessToken = null;
-    }, expiresIn - 60000);
     _loadCalendarData();
   }
 
   async function _loadCalendarData() {
+    const calBtn   = document.getElementById('calBtn');
+    const statusEl = document.getElementById('calBtnStatus');
+
+    if (statusEl) { statusEl.textContent = ' 読み込み中...'; statusEl.style.display = ''; }
+    if (calBtn)   calBtn.disabled = true;
+
     try {
-      const monday = getWeekMonday(currentWeekOffset);
-      const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
-      sunday.setHours(23, 59, 59, 999);
+      const monday    = getWeekMonday(currentWeekOffset);
+      const weekStart = monday.getFullYear() + '-'
+        + String(monday.getMonth() + 1).padStart(2, '0') + '-'
+        + String(monday.getDate()).padStart(2, '0');
 
-      const params = new URLSearchParams({
-        timeMin: monday.toISOString(),
-        timeMax: sunday.toISOString(),
-        singleEvents: 'true',
-        orderBy: 'startTime',
-        maxResults: '100',
-      });
-
-      const apiUrl = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?' + params;
-      _calLog('④ Calendar API リクエスト', {
-        url:         apiUrl,
-        週:          monday.toLocaleDateString('ja-JP') + ' 〜 ' + sunday.toLocaleDateString('ja-JP'),
-        weekOffset:  currentWeekOffset,
-        token_prefix: _calAccessToken.slice(0, 12) + '...',
-      });
-
-      const res = await fetch(apiUrl, { headers: { Authorization: 'Bearer ' + _calAccessToken } });
-
-      _calLog('④ Calendar API レスポンス', { status: res.status, ok: res.ok });
-
-      if (res.status === 401) {
-        _calError('④ 401 Unauthorized', 'トークン期限切れ → 再認証 (prompt:consent)');
-        _calAccessToken = null;
-        _gsiTokenClient.requestAccessToken({ prompt: 'consent' });
-        return;
-      }
-      if (!res.ok) {
-        const body = await res.text();
-        _calError('④ APIエラー', { status: res.status, body: body.slice(0, 400) });
-        throw new Error('HTTP ' + res.status);
-      }
+      const res = await fetch(GAS_CALENDAR_URL + '?weekStart=' + weekStart);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
 
       const data = await res.json();
-      const fmtTime = d => String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+      if (data.error) throw new Error(data.error);
+
+      const fmtTime = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 
       weekTasks = { mon: [], tue: [], wed: [], thu: [], fri: [] };
       deletedTaskIds.clear();
 
       (data.items || []).forEach((ev, i) => {
         const dateStr = ev.start.dateTime || ev.start.date;
-        const d = new Date(dateStr);
-        const dayKey = CAL_DAY_MAP[d.getDay()];
+        const d       = new Date(dateStr);
+        const dayKey  = CAL_DAY_MAP[d.getDay()];
         if (!dayKey) return;
 
-        const isAllDay = !!ev.start.date;
-        const timeStr = isAllDay ? '終日' : fmtTime(new Date(ev.start.dateTime)) + '〜' + fmtTime(new Date(ev.end.dateTime));
-        const title = ev.summary || '（タイトルなし）';
-        const text  = isAllDay ? title : timeStr + ' ' + title;
+        const isAllDay = !ev.start.dateTime;
+        const timeStr  = isAllDay ? '終日' : fmtTime(new Date(ev.start.dateTime)) + '〜' + fmtTime(new Date(ev.end.dateTime));
+        const title    = ev.summary || '（タイトルなし）';
+        const text     = isAllDay ? title : timeStr + ' ' + title;
 
         weekTasks[dayKey].push({ id: ev.id || ('ev_' + i), text });
       });
 
-      _calLog('⑤ 取得完了', {
-        イベント総数: (data.items || []).length,
-        月: weekTasks.mon.length + '件',
-        火: weekTasks.tue.length + '件',
-        水: weekTasks.wed.length + '件',
-        木: weekTasks.thu.length + '件',
-        金: weekTasks.fri.length + '件',
-      });
-
       calendarLoaded = true;
-      const statusEl = document.getElementById('calBtnStatus');
       if (statusEl) statusEl.style.display = 'none';
       render();
 
     } catch (err) {
-      _calError('⑤ 例外発生', { message: err.message, stack: err.stack });
-      alert('カレンダーの取得に失敗しました: ' + err.message);
+      console.error('[Calendar] エラー:', err);
+      if (statusEl) { statusEl.textContent = ' 取得失敗'; statusEl.style.display = ''; }
+      alert('カレンダーの取得に失敗しました:\n' + err.message);
+    } finally {
+      if (calBtn) calBtn.disabled = false;
     }
   }
 
@@ -3445,11 +3301,7 @@
     deletedTaskIds.clear();
     calendarLoaded = false;
     updateWeekDisplay();
-    if (_calAccessToken) {
-      _loadCalendarData();
-    } else {
-      render();
-    }
+    _loadCalendarData();
   }
 
   function goToCurrentWeek() {
@@ -3460,11 +3312,7 @@
     deletedTaskIds.clear();
     calendarLoaded = false;
     updateWeekDisplay();
-    if (_calAccessToken) {
-      _loadCalendarData();
-    } else {
-      render();
-    }
+    _loadCalendarData();
   }
 
   updateWeekDisplay();
