@@ -3152,49 +3152,53 @@
       if (data.error) throw new Error(data.error);
 
       // dateTime文字列 → JSTのDate（getUTC*メソッドでJST値を読める形式）
-      // new Date(str).getTime() は常にUTCのエポック秒を返すため、+9hすれば
-      // getUTCHours()/getUTCDay()がJSTの値になる
       const toJST = str => new Date(new Date(str).getTime() + 9 * 60 * 60 * 1000);
-      // JSTを指すDateからHH:MM文字列を生成（getUTC*で取得）
       const fmtTime = dt => String(dt.getUTCHours()).padStart(2, '0') + ':' + String(dt.getUTCMinutes()).padStart(2, '0');
 
       weekTasks = { mon: [], tue: [], wed: [], thu: [], fri: [] };
       deletedTaskIds.clear();
 
-      // GASレスポンスのイベント配列を取得（items / events / data など複数形式に対応）
-      const evList = Array.isArray(data)
-        ? data
-        : (data.items || data.events || data.data || []);
+      // GASレスポンスのイベント配列（items / events / data など複数形式に対応）
+      const evList = Array.isArray(data) ? data : (data.items || data.events || data.data || []);
       console.log('[Calendar] イベント件数:', evList.length);
 
       evList.forEach((ev, i) => {
-        const startInfo = ev.start || {};
-        const endInfo   = ev.end   || {};
-        const isAllDay  = !startInfo.dateTime && !!startInfo.date;
+        // GASレスポンス形式を吸収
+        // 形式A: {summary:"...", start:{dateTime:"..."}, end:{dateTime:"..."}}
+        // 形式B: {title:"...", start:"2026-...", end:"2026-..."}  ← 今回のGAS
+        const startStr = typeof ev.start === 'string' ? ev.start
+                       : (ev.start && ev.start.dateTime) ? ev.start.dateTime
+                       : (ev.start && ev.start.date)     ? ev.start.date
+                       : null;
+        const endStr   = typeof ev.end === 'string' ? ev.end
+                       : (ev.end && ev.end.dateTime) ? ev.end.dateTime
+                       : null;
+        const title    = ev.title || ev.summary || '（タイトルなし）';
+
+        if (!startStr) return;
+
+        // 終日判定: YYYY-MM-DD形式（時刻なし）
+        const isAllDay = /^\d{4}-\d{2}-\d{2}$/.test(startStr);
         let dayKey;
 
         if (isAllDay) {
-          // 終日イベントは "YYYY-MM-DD" をローカル日付としてパース（タイムゾーン不要）
-          const parts = (startInfo.date || '').split('-').map(Number);
-          if (parts.length < 3) return;
+          const parts = startStr.split('-').map(Number);
           const d = new Date(parts[0], parts[1] - 1, parts[2]);
           dayKey = CAL_DAY_MAP[d.getDay()];
         } else {
-          // 時刻イベント: UTC→JSTに変換して曜日判定
-          const jstStart = toJST(startInfo.dateTime);
+          const jstStart = toJST(startStr);
           dayKey = CAL_DAY_MAP[jstStart.getUTCDay()];
-          console.log('[Calendar]', ev.summary, '| raw:', startInfo.dateTime, '| JSTday:', jstStart.getUTCDay(), '| key:', dayKey);
+          console.log('[Calendar]', title, '| raw:', startStr, '| JSTday:', jstStart.getUTCDay(), '| key:', dayKey);
         }
 
         if (!dayKey) return;
 
-        const title = ev.summary || ev.title || '（タイトルなし）';
         let timeStr;
         if (isAllDay) {
           timeStr = '終日';
         } else {
-          const jStart = toJST(startInfo.dateTime);
-          const jEnd   = toJST(endInfo.dateTime || startInfo.dateTime);
+          const jStart = toJST(startStr);
+          const jEnd   = endStr ? toJST(endStr) : jStart;
           timeStr = fmtTime(jStart) + '〜' + fmtTime(jEnd);
         }
         const text = isAllDay ? title : timeStr + ' ' + title;
