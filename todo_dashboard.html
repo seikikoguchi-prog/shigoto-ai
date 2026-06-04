@@ -3148,38 +3148,55 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
 
       const data = await res.json();
+      console.log('[Calendar] GASレスポンス:', JSON.stringify(data).slice(0, 500));
       if (data.error) throw new Error(data.error);
 
-      // UTC → JST(UTC+9) 変換ヘルパー
-      const toJST = utcStr => new Date(new Date(utcStr).getTime() + 9 * 60 * 60 * 1000);
-      const fmtJST = utcStr => {
-        const j = toJST(utcStr);
-        return String(j.getUTCHours()).padStart(2, '0') + ':' + String(j.getUTCMinutes()).padStart(2, '0');
-      };
+      // dateTime文字列 → JSTのDate（getUTC*メソッドでJST値を読める形式）
+      // new Date(str).getTime() は常にUTCのエポック秒を返すため、+9hすれば
+      // getUTCHours()/getUTCDay()がJSTの値になる
+      const toJST = str => new Date(new Date(str).getTime() + 9 * 60 * 60 * 1000);
+      // JSTを指すDateからHH:MM文字列を生成（getUTC*で取得）
+      const fmtTime = dt => String(dt.getUTCHours()).padStart(2, '0') + ':' + String(dt.getUTCMinutes()).padStart(2, '0');
 
       weekTasks = { mon: [], tue: [], wed: [], thu: [], fri: [] };
       deletedTaskIds.clear();
 
-      (data.items || []).forEach((ev, i) => {
-        const isAllDay = !ev.start.dateTime;
+      // GASレスポンスのイベント配列を取得（items / events / data など複数形式に対応）
+      const evList = Array.isArray(data)
+        ? data
+        : (data.items || data.events || data.data || []);
+      console.log('[Calendar] イベント件数:', evList.length);
+
+      evList.forEach((ev, i) => {
+        const startInfo = ev.start || {};
+        const endInfo   = ev.end   || {};
+        const isAllDay  = !startInfo.dateTime && !!startInfo.date;
         let dayKey;
 
         if (isAllDay) {
-          // 終日イベントは "YYYY-MM-DD" をそのままパース（タイムゾーン不要）
-          const parts = (ev.start.date || '').split('-').map(Number);
+          // 終日イベントは "YYYY-MM-DD" をローカル日付としてパース（タイムゾーン不要）
+          const parts = (startInfo.date || '').split('-').map(Number);
+          if (parts.length < 3) return;
           const d = new Date(parts[0], parts[1] - 1, parts[2]);
           dayKey = CAL_DAY_MAP[d.getDay()];
         } else {
-          // 時刻イベントはUTC→JSTで曜日判定
-          dayKey = CAL_DAY_MAP[toJST(ev.start.dateTime).getUTCDay()];
+          // 時刻イベント: UTC→JSTに変換して曜日判定
+          const jstStart = toJST(startInfo.dateTime);
+          dayKey = CAL_DAY_MAP[jstStart.getUTCDay()];
+          console.log('[Calendar]', ev.summary, '| raw:', startInfo.dateTime, '| JSTday:', jstStart.getUTCDay(), '| key:', dayKey);
         }
 
         if (!dayKey) return;
 
-        const title   = ev.summary || '（タイトルなし）';
-        const timeStr = isAllDay
-          ? '終日'
-          : fmtJST(ev.start.dateTime) + '〜' + fmtJST(ev.end.dateTime);
+        const title = ev.summary || ev.title || '（タイトルなし）';
+        let timeStr;
+        if (isAllDay) {
+          timeStr = '終日';
+        } else {
+          const jStart = toJST(startInfo.dateTime);
+          const jEnd   = toJST(endInfo.dateTime || startInfo.dateTime);
+          timeStr = fmtTime(jStart) + '〜' + fmtTime(jEnd);
+        }
         const text = isAllDay ? title : timeStr + ' ' + title;
 
         weekTasks[dayKey].push({ id: ev.id || ('ev_' + i), text });
