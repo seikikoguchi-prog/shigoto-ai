@@ -3150,21 +3150,37 @@
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      const fmtTime = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      // UTC → JST(UTC+9) 変換ヘルパー
+      const toJST = utcStr => new Date(new Date(utcStr).getTime() + 9 * 60 * 60 * 1000);
+      const fmtJST = utcStr => {
+        const j = toJST(utcStr);
+        return String(j.getUTCHours()).padStart(2, '0') + ':' + String(j.getUTCMinutes()).padStart(2, '0');
+      };
 
       weekTasks = { mon: [], tue: [], wed: [], thu: [], fri: [] };
       deletedTaskIds.clear();
 
       (data.items || []).forEach((ev, i) => {
-        const dateStr = ev.start.dateTime || ev.start.date;
-        const d       = new Date(dateStr);
-        const dayKey  = CAL_DAY_MAP[d.getDay()];
+        const isAllDay = !ev.start.dateTime;
+        let dayKey;
+
+        if (isAllDay) {
+          // 終日イベントは "YYYY-MM-DD" をそのままパース（タイムゾーン不要）
+          const parts = (ev.start.date || '').split('-').map(Number);
+          const d = new Date(parts[0], parts[1] - 1, parts[2]);
+          dayKey = CAL_DAY_MAP[d.getDay()];
+        } else {
+          // 時刻イベントはUTC→JSTで曜日判定
+          dayKey = CAL_DAY_MAP[toJST(ev.start.dateTime).getUTCDay()];
+        }
+
         if (!dayKey) return;
 
-        const isAllDay = !ev.start.dateTime;
-        const timeStr  = isAllDay ? '終日' : fmtTime(new Date(ev.start.dateTime)) + '〜' + fmtTime(new Date(ev.end.dateTime));
-        const title    = ev.summary || '（タイトルなし）';
-        const text     = isAllDay ? title : timeStr + ' ' + title;
+        const title   = ev.summary || '（タイトルなし）';
+        const timeStr = isAllDay
+          ? '終日'
+          : fmtJST(ev.start.dateTime) + '〜' + fmtJST(ev.end.dateTime);
+        const text = isAllDay ? title : timeStr + ' ' + title;
 
         weekTasks[dayKey].push({ id: ev.id || ('ev_' + i), text });
       });
