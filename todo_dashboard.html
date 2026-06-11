@@ -2982,11 +2982,85 @@
 
   function openShuppoModal() {
     document.getElementById('reportModalTitle').textContent = '📊 週報';
-    document.getElementById('reportOutput').value = buildShuppo();
     document.getElementById('reportInputStep').style.display = 'none';
     document.getElementById('reportOutputStep').style.display = '';
     document.getElementById('copyBtn').textContent = '📋 コピー';
     document.getElementById('reportModal').style.display = 'flex';
+
+    const base = buildShuppo();
+    document.getElementById('reportOutput').value = base;
+    document.getElementById('reportOutput').readOnly = true;
+
+    // カレンダーデータがあればAIで①〜④を生成
+    const allEvents = [];
+    DAYS.forEach(d => {
+      (weekTasks[d.key] || []).forEach(t => {
+        if (!deletedTaskIds.has(t.id)) allEvents.push(t.text);
+      });
+    });
+    if (!calendarLoaded || allEvents.length === 0) return;
+
+    // ローディング表示
+    document.getElementById('reportOutput').value =
+      base.replace(
+        '① 今週の印象的な出来事・気づき（「これは面白かった！」という体験）',
+        '① 今週の印象的な出来事・気づき（「これは面白かった！」という体験）\n⏳ AIが下書きを生成中...'
+      );
+
+    _generateShuppoAI(base, allEvents);
+  }
+
+  async function _generateShuppoAI(base, allEvents) {
+    const eventList = allEvents.join('\n');
+    const prompt = `あなたはビジネスパーソンの週報下書きを作るアシスタントです。
+以下は今週のカレンダーイベント一覧です：
+
+${eventList}
+
+これらのイベントをもとに、週報の①〜④の項目をそれぞれ2〜3文で自然な日本語で下書きしてください。
+主観的な気づきや学びを含む、リアルな文章にしてください。
+出力はJSON形式で以下のキーのみ返してください（他の文字は一切含めない）：
+{"q1":"①の内容","q2":"②の内容","q3":"③の内容","q4":"④の内容"}`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      const data = await res.json();
+      const text = (data.content || []).map(b => b.text || '').join('');
+      const clean = text.replace(/```json|```/g, '').trim();
+      const obj = JSON.parse(clean);
+
+      let result = base;
+      result = result.replace(
+        '① 今週の印象的な出来事・気づき（「これは面白かった！」という体験）',
+        `① 今週の印象的な出来事・気づき（「これは面白かった！」という体験）\n${obj.q1}`
+      );
+      result = result.replace(
+        '② 経営とマネジメントの気づき（経営・マネジメントの視点で何が読み取れるか）',
+        `② 経営とマネジメントの気づき（経営・マネジメントの視点で何が読み取れるか）\n${obj.q2}`
+      );
+      result = result.replace(
+        '③ 数字・進捗（自分の仕事に紐づく数字）',
+        `③ 数字・進捗（自分の仕事に紐づく数字）\n${obj.q3}`
+      );
+      result = result.replace(
+        '④ 個人の振り返り（今週何を学んで、来週何を変えるのか）',
+        `④ 個人の振り返り（今週何を学んで、来週何を変えるのか）\n${obj.q4}`
+      );
+
+      document.getElementById('reportOutput').value = result;
+    } catch (e) {
+      console.error('AI生成エラー:', e);
+      document.getElementById('reportOutput').value =
+        base.replace('\n⏳ AIが下書きを生成中...', '');
+    }
   }
 
   function closeModal() {
