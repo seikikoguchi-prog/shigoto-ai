@@ -3054,74 +3054,129 @@
   }
 
   function buildShuppo() {
-    const s       = getState();
-    const ks      = getKeymanState();
-    const checked = getCheckedState();
-    const now     = new Date();
+    const now    = new Date();
+    const monday = getWeekMonday(currentWeekOffset);
+    const friday = new Date(monday); friday.setDate(monday.getDate() + 4);
+    const fmt = d => `${d.getMonth()+1}月${d.getDate()}日`;
+    const weekLabel = `${monday.getFullYear()}年${fmt(monday)}（月）〜${fmt(friday)}（金）`;
 
-    const wStart = DAYS[0].date;
-    const wEnd   = DAYS[DAYS.length - 1].date;
-    const weekLabel = `${now.getFullYear()}年${wStart}〜${wEnd}週`;
+    // ── 除外キーワード（タイトルに含まれていたらスキップ）──
+    const EXCLUDE_KEYWORDS = [
+      // ルーティン系
+      'タスク管理','メール処理','作業ブロック','チェック','確認メール',
+      // プライベート系
+      'お迎え','通院','家族','子ども','こども','ランチ','飯','ごはん','井戸っち',
+      'プライベート','個人','帰宅','外出','休暇','有休','半休',
+      // センシティブ系
+      '評価面談','プレゼント','サプライズ','健康診断','人間ドック',
+    ];
+    // 定例・全社系キーワード
+    const TEIREИ_KEYWORDS = [
+      '夕礼','朝礼','全社','定例','PMチーム','チームmtg','チームMTG','運営G',
+      'stand up','standup','スタンドアップ',
+    ];
+    // テーマ分類ルール（最初にマッチしたテーマを使う）
+    const THEME_RULES = [
+      { theme: '商談関連',              keys: ['商談','交渉','提案','営業','dip','ディップ','バイトル','リクルート','求人'] },
+      { theme: '倉庫・物流・拠点関連',  keys: ['倉庫','物流','配送','拠点','阿見','SBS','ヤマト','サンデン','琉球','デポ','配達','トレーニング','研修','視察','訪問'] },
+      { theme: 'AI・DX・業務改善',      keys: ['AI','DX','自動化','改善','システム','ダッシュボード','スプレッドシート','GAS','Claude','GPT'] },
+      { theme: '機材・備品管理',        keys: ['機材','備品','蓄冷','ケース','器具','購入','発注'] },
+      { theme: '採用・人事',            keys: ['採用','面接','面談','入社','退社','評価','1on1','one on one','1 on 1'] },
+    ];
 
-    const lines = [SEP, `📊 ${weekLabel}　週報`, SEP, ''];
-
-    lines.push('✅ 今週の完了タスク');
-    let anyDone = false;
+    // ── イベント収集・フィルタ ──
+    const allEvents = [];
     DAYS.forEach(d => {
-      const done = (weekTasks[d.key] || []).filter(t => !deletedTaskIds.has(t.id) && checked[t.id]);
-      if (done.length) {
-        lines.push(`【${d.label}（${d.date}）】`);
-        done.forEach(t => lines.push(`・${t.text}`));
-        anyDone = true;
-      }
-    });
-    if (!anyDone) lines.push('・（完了タスクなし）');
-    lines.push('');
-
-    // 🚀 プロジェクト進捗
-    lines.push('🚀 プロジェクト進捗');
-    PROJECTS.forEach(p => {
-      const msTotal = p.milestones.length;
-      const msDone  = p.milestones.filter((_, i) => s[p.key + '_ms_' + i]).length;
-      if (msTotal) {
-        const pct = Math.round(msDone / msTotal * 100);
-        lines.push(`・${p.name}：マイルストーン ${msDone}/${msTotal} 完了（${pct}%）`);
-      } else {
-        lines.push(`・${p.name}：進行中`);
-      }
-    });
-    lines.push('');
-
-    // 🤝 キーマン連絡状況（今週連絡済み）
-    lines.push('🤝 キーマン連絡状況');
-    const parseD = str => { const [y,m,d] = str.split('-').map(Number); return new Date(y,m-1,d); };
-    const [wm0, wd0] = DAYS[0].date.split('/').map(Number);
-    const [wm1, wd1] = DAYS[DAYS.length-1].date.split('/').map(Number);
-    const weekMin = new Date(now.getFullYear(), wm0-1, wd0);
-    const weekMax = new Date(now.getFullYear(), wm1-1, wd1);
-    const contacted = KEYMANS.filter(km => {
-      const last = ks[km.key + '_last'];
-      if (!last) return false;
-      const d = parseD(last);
-      return d >= weekMin && d <= weekMax;
-    });
-    if (contacted.length) {
-      contacted.forEach(km => {
-        const last = ks[km.key + '_last'];
-        lines.push(`・${km.name}（${km.company}）：${formatJpDate(last)} 連絡済み`);
+      (weekTasks[d.key] || []).forEach(t => {
+        if (deletedTaskIds.has(t.id)) return;
+        const title = t.text.replace(/^\d{2}:\d{2}〜\d{2}:\d{2}\s*/, '').trim();
+        const time  = t.text.match(/^(\d{2}:\d{2}〜\d{2}:\d{2})/)?.[1] || '';
+        // 除外チェック
+        if (EXCLUDE_KEYWORDS.some(k => title.includes(k))) return;
+        allEvents.push({ title, time, dayLabel: d.label, date: d.date, raw: t.text });
       });
+    });
+
+    // ── テーマ分類 ──
+    const themeMap = {}; // theme → [text]
+    const teireiList = [];
+    const otherList  = [];
+
+    allEvents.forEach(ev => {
+      const label = `・${ev.time ? ev.time + ' ' : ''}${ev.title}`;
+      if (TEIREИ_KEYWORDS.some(k => ev.title.includes(k))) {
+        teireiList.push(label);
+        return;
+      }
+      let matched = false;
+      for (const rule of THEME_RULES) {
+        if (rule.keys.some(k => ev.title.toLowerCase().includes(k.toLowerCase()))) {
+          if (!themeMap[rule.theme]) themeMap[rule.theme] = [];
+          themeMap[rule.theme].push(label);
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) otherList.push(label);
+    });
+
+    // 件数順ソートして最大4テーマ選択（その他・定例は別枠）
+    const sortedThemes = Object.entries(themeMap)
+      .sort((a, b) => b[1].length - a[1].length)
+      .slice(0, 4);
+
+    // ── 来週のイベント収集 ──
+    const nextMonday = getWeekMonday(currentWeekOffset + 1);
+    const nextFriday = new Date(nextMonday); nextFriday.setDate(nextMonday.getDate() + 4);
+    // 来週分はweekTasksにないため「来週の予定は手動記入」案内にする
+    // （将来的に来週分も取得できれば置き換え可）
+
+    // ── 出力組み立て ──
+    const L = [];
+    const BAR = '━━━━━━━━━━━━━━━━━';
+
+    L.push(`:clipboard: 週報｜${weekLabel}`);
+    L.push('');
+    L.push('① 今週の印象的な出来事・気づき（「これは面白かった！」という体験）');
+    L.push('');
+    L.push('② 経営とマネジメントの気づき（経営・マネジメントの視点で何が読み取れるか）');
+    L.push('');
+    L.push('③ 数字・進捗（自分の仕事に紐づく数字）');
+    L.push('');
+    L.push('④ 個人の振り返り（今週何を学んで、来週何を変えるのか）');
+    L.push('');
+    L.push(BAR);
+    L.push(':label: 今週のハイライト');
+    L.push(BAR);
+
+    if (sortedThemes.length === 0 && otherList.length === 0 && teireiList.length === 0) {
+      L.push('・（カレンダーデータなし。先に「📅 カレンダー取得」を実行してください）');
     } else {
-      lines.push('・今週の連絡なし');
+      sortedThemes.forEach(([theme, items], idx) => {
+        L.push(idx === 0 ? `【${theme}】（今週の最大テーマ）` : `【${theme}】`);
+        items.forEach(i => L.push(i));
+        L.push('');
+      });
+      if (otherList.length) {
+        L.push('【その他案件・社内系】');
+        otherList.forEach(i => L.push(i));
+        L.push('');
+      }
+      if (teireiList.length) {
+        L.push('【定例・全社系】');
+        // 定例は重複タイトルをまとめる
+        const uniq = [...new Set(teireiList)];
+        uniq.forEach(i => L.push(i));
+        L.push('');
+      }
     }
-    lines.push('');
 
-    // 📅 来週の予定
-    lines.push('📅 来週の予定');
-    lines.push('・来週分未入力');
-    lines.push('');
-    lines.push(SEP);
+    L.push(BAR);
+    L.push(':pushpin: 来週以降のアクション');
+    L.push(BAR);
+    L.push(`・（${fmt(nextMonday)}週の予定を記入）`);
 
-    return lines.join('\n');
+    return L.join('\n');
   }
 
   // ---- Google Calendar (GAS経由) ----
