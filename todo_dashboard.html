@@ -2991,7 +2991,7 @@
     document.getElementById('reportOutput').value = base;
     document.getElementById('reportOutput').readOnly = true;
 
-    // カレンダーデータがあればAIで①〜④を生成
+    // カレンダーデータがあればClaudeに貼り付け用テキストをコピー
     const allEvents = [];
     DAYS.forEach(d => {
       (weekTasks[d.key] || []).forEach(t => {
@@ -3000,14 +3000,20 @@
     });
     if (!calendarLoaded || allEvents.length === 0) return;
 
-    // ローディング表示
-    document.getElementById('reportOutput').value =
-      base.replace(
-        '① 今週の印象的な出来事・気づき（「これは面白かった！」という体験）',
-        '① 今週の印象的な出来事・気づき（「これは面白かった！」という体験）\n⏳ AIが下書きを生成中...'
-      );
+    const claudePrompt = `以下は今週のカレンダーイベント一覧です。これをもとに週報の①〜④をそれぞれ2〜3文で下書きしてください。
 
-    _generateShuppoAI(base, allEvents);
+【今週のイベント】
+${allEvents.join('\n')}
+
+①今週の印象的な出来事・気づき（「これは面白かった！」という体験）
+②経営とマネジメントの気づき（経営・マネジメントの視点で何が読み取れるか）
+③数字・進捗（自分の仕事に紐づく数字）
+④個人の振り返り（今週何を学んで、来週何を変えるのか）`;
+
+    navigator.clipboard.writeText(claudePrompt).then(() => {
+      // モーダルにコピー完了メッセージを追加
+      document.getElementById('reportModalTitle').textContent = '📊 週報　✅ ①〜④生成用テキストをコピーしました';
+    }).catch(() => {});
   }
 
   async function _generateShuppoAI(base, allEvents) {
