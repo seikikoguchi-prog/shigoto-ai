@@ -3010,10 +3010,24 @@ ${allEvents.join('\n')}
 ③数字・進捗（自分の仕事に紐づく数字）
 ④個人の振り返り（今週何を学んで、来週何を変えるのか）`;
 
-    navigator.clipboard.writeText(claudePrompt).then(() => {
-      // モーダルにコピー完了メッセージを追加
+    // クリップボードにコピー（フォールバック付き）
+    const doCopy = () => {
+      const ta = document.createElement('textarea');
+      ta.value = claudePrompt;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
       document.getElementById('reportModalTitle').textContent = '📊 週報　✅ ①〜④生成用テキストをコピーしました';
-    }).catch(() => {});
+    };
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(claudePrompt).then(() => {
+        document.getElementById('reportModalTitle').textContent = '📊 週報　✅ ①〜④生成用テキストをコピーしました';
+      }).catch(doCopy);
+    } else {
+      doCopy();
+    }
   }
 
   async function _generateShuppoAI(base, allEvents) {
