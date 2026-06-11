@@ -3011,16 +3011,14 @@
   }
 
   async function _generateShuppoAI(base, allEvents) {
-    const eventList = allEvents.join('\n');
-    const prompt = `あなたはビジネスパーソンの週報下書きを作るアシスタントです。
-以下は今週のカレンダーイベント一覧です：
+    // イベントタイトルのみ抽出して短縮（URL長制限対策）
+    const titles = allEvents
+      .map(t => t.replace(/^\d{2}:\d{2}〜\d{2}:\d{2}\s*/, '').trim())
+      .filter((v, i, a) => a.indexOf(v) === i) // 重複除去
+      .slice(0, 20) // 最大20件
+      .join('、');
 
-${eventList}
-
-これらのイベントをもとに、週報の①〜④の項目をそれぞれ2〜3文で自然な日本語で下書きしてください。
-主観的な気づきや学びを含む、リアルな文章にしてください。
-出力はJSON形式で以下のキーのみ返してください（他の文字は一切含めない）：
-{"q1":"①の内容","q2":"②の内容","q3":"③の内容","q4":"④の内容"}`;
+    const prompt = `週報下書きを作成。今週の主な予定：${titles}。①印象的な出来事・気づき②経営・マネジメントの気づき③数字・進捗④個人の振り返りをそれぞれ2〜3文で。JSON{"q1":"","q2":"","q3":"","q4":""}のみ返すこと。`;
 
     try {
       const aiUrl = GAS_CALENDAR_URL + '?mode=ai&prompt=' + encodeURIComponent(prompt);
