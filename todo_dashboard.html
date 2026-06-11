@@ -3022,11 +3022,17 @@
 
     try {
       const aiUrl = GAS_CALENDAR_URL + '?mode=ai&prompt=' + encodeURIComponent(prompt);
-      const res = await fetch(aiUrl);
-      const data = await res.json();
+      const res = await fetch(aiUrl, { redirect: 'follow' });
+      const rawText = await res.text();
+      console.log('[AI] GASレスポンス:', rawText.slice(0, 300));
+
+      // AnthropicのレスポンスJSONをパース
+      const data = JSON.parse(rawText);
       const text = (data.content || []).map(b => b.text || '').join('');
-      const clean = text.replace(/```json|```/g, '').trim();
-      const obj = JSON.parse(clean);
+      const clean = text.replace(/```json[\s\S]*?```|```/g, '').trim();
+      // JSONブロックを抽出
+      const jsonMatch = clean.match(/\{[\s\S]*\}/);
+      const obj = JSON.parse(jsonMatch ? jsonMatch[0] : clean);
 
       let result = base;
       result = result.replace(
