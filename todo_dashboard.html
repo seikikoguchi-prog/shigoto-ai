@@ -3251,7 +3251,7 @@ ${text.slice(0, 6000)}`;
         '</div>' +
         decisionsHtml + todosHtml + summaryHtml +
         '<div class="minutes-history-actions">' +
-        '<button class="minutes-history-btn" style="background:#e8f0fe;color:#3367d6;" data-id="' + r.id + '" onclick="addTodosFromRecord(this.dataset.id)">＋ チェックしたTODOを追加</button>' +
+        '<button class="minutes-history-btn" style="background:#e8f0fe;color:#3367d6;" onclick="addTodosFromRecord(\'' + r.id + '\')">＋ チェックしたTODOを追加</button>' +
         '<button class="minutes-history-btn" style="background:#fce8e6;color:#d93025;" data-id="' + r.id + '" onclick="deleteMinutesRecord(this.dataset.id)">🗑 削除</button>' +
         '</div></div>';
     }).join('');
