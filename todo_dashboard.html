@@ -3189,14 +3189,17 @@ ${text.slice(0, 6000)}`;
 
   function addTodosFromRecord(id) {
     const record = minutesRecords.find(r => r.id === id);
-    if (!record || !record.todos.length) return;
+    if (!record || !record.todos.length) { alert('TODOがありません'); return; }
     const todayKey = (DAYS.find(d => d.today) || DAYS[0]).key;
     record.todos.forEach((text, i) => {
-      weekTasks[todayKey].push({ id: 'mr_t_' + Date.now() + i, text });
+      if (!weekTasks[todayKey]) weekTasks[todayKey] = [];
+      weekTasks[todayKey].push({ id: 'mr_t_' + Date.now().toString(36) + i, text });
     });
-    saveWeekTasks();
     render();
-    alert(`${record.todos.length}件のTODOを追加しました`);
+    // 週次TODOタブに切り替え
+    const tabBtn = document.querySelector('.tab-btn[data-tab="tab-todo"]');
+    if (tabBtn) tabBtn.click();
+    alert(record.todos.length + '件のTODOを追加しました');
   }
 
   function renderMinutesHistory() {
