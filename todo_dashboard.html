@@ -2947,7 +2947,7 @@
 ${text.slice(0, 3000)}`;
 
     try {
-      const aiUrl = GAS_CALENDAR_URL + '?mode=ai&prompt=' + encodeURIComponent(prompt);
+      const aiUrl = GAS_CALENDAR_URL + '?mode=ai_minutes&name=' + encodeURIComponent(meetingName.slice(0, 50)) + '&text=' + encodeURIComponent(text.slice(0, 1500));
       const obj = await fetchJsonp(aiUrl);
       renderMinutesAIResult(typeof obj === 'string' ? JSON.parse(obj) : obj);
     } catch (e) {
@@ -3281,14 +3281,12 @@ ${allEvents.join('\n')}
     // イベントタイトルのみ抽出して短縮（URL長制限対策）
     const titles = allEvents
       .map(t => t.replace(/^\d{2}:\d{2}〜\d{2}:\d{2}\s*/, '').trim())
-      .filter((v, i, a) => a.indexOf(v) === i) // 重複除去
-      .slice(0, 20) // 最大20件
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .slice(0, 20)
       .join('、');
 
-    const prompt = `週報下書きを作成。今週の主な予定：${titles}。①印象的な出来事・気づき②経営・マネジメントの気づき③数字・進捗④個人の振り返りをそれぞれ2〜3文で。JSON{"q1":"","q2":"","q3":"","q4":""}のみ返すこと。`;
-
     try {
-      const aiUrl = GAS_CALENDAR_URL + '?mode=ai&prompt=' + encodeURIComponent(prompt);
+      const aiUrl = GAS_CALENDAR_URL + '?mode=ai_shuppo&titles=' + encodeURIComponent(titles);
       const obj = await fetchJsonp(aiUrl);
 
       let result = base;
