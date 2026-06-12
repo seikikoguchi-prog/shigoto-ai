@@ -2917,7 +2917,8 @@
     btn.textContent = '⏳ 取得中...';
     btn.disabled = true;
     try {
-      const data = await fetchJsonp(GAS_CALENDAR_URL + '?mode=transcript');
+      const res = await fetch(GAS_CALENDAR_URL + '?mode=transcript', { redirect: 'follow' });
+      const data = JSON.parse(await res.text());
       if (!Array.isArray(data) || data.length === 0) {
         btn.textContent = '📧 メールなし';
         setTimeout(() => { btn.textContent = '📧 Gmailから取得'; btn.disabled = false; }, 2000);
@@ -3243,7 +3244,8 @@ ${text.slice(0, 3000)}`;
     document.getElementById('reportModalTitle').textContent = '📊 週報　⏳ Meet文字起こしを取得中...';
     let transcriptText = '';
     try {
-      const tData = await fetchJsonp(GAS_CALENDAR_URL + '?mode=transcript');
+      const tRes = await fetch(GAS_CALENDAR_URL + '?mode=transcript', { redirect: 'follow' });
+      const tData = JSON.parse(await tRes.text());
       if (Array.isArray(tData) && tData.length > 0) {
         transcriptText = '\n\n【今週のMeet文字起こし】\n' +
           tData.map(t => `■ ${t.subject}\n${t.body}`).join('\n\n');
@@ -3530,8 +3532,10 @@ ${allEvents.join('\n')}
         + String(monday.getMonth() + 1).padStart(2, '0') + '-'
         + String(monday.getDate()).padStart(2, '0');
 
-      const data = await fetchJsonp(GAS_CALENDAR_URL + '?weekStart=' + weekStart);
-      console.log('[Calendar] GASレスポンス件数:', Array.isArray(data) ? data.length : data);
+      const res = await fetch(GAS_CALENDAR_URL + '?weekStart=' + weekStart, { redirect: 'follow' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      console.log('[Calendar] イベント件数:', Array.isArray(data) ? data.length : '?');
 
       // dateTime文字列 → JSTのDate（getUTC*メソッドでJST値を読める形式）
       const toJST = str => new Date(new Date(str).getTime() + 9 * 60 * 60 * 1000);
