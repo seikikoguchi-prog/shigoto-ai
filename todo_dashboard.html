@@ -1189,7 +1189,57 @@
 
     .minutes-clear-btn:hover { background: #dde0e7; }
 
-    .minutes-ai-section {
+    .minutes-history-card {
+      background: #fff;
+      border: 1px solid #e8eaf6;
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .minutes-history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .minutes-history-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #2d2d5e;
+    }
+    .minutes-history-date {
+      font-size: 0.78rem;
+      color: #999;
+    }
+    .minutes-history-section {
+      font-size: 0.82rem;
+      color: #555;
+      margin: 6px 0 2px;
+      line-height: 1.7;
+    }
+    .minutes-history-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #667eea;
+      margin: 8px 0 2px;
+    }
+    .minutes-history-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .minutes-history-btn {
+      padding: 4px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
       background: #f7f9ff;
       border: 1px solid #e0e7ff;
       border-radius: 8px;
@@ -1800,9 +1850,10 @@
         <div class="minutes-ai-header">📝 議事録まとめ</div>
         <p id="minutesSummaryText" style="font-size:0.85rem;color:#444;line-height:1.7;white-space:pre-wrap;margin:8px 0 0;"></p>
       </div>
-      <!-- TODOに追加ボタン -->
-      <div style="margin-top:12px;">
+      <!-- アクションボタン -->
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
         <button class="minutes-add-btn" id="minutesAddBtn" onclick="addMinutesTasks()">＋ チェック済みをTODOに追加</button>
+        <button onclick="saveMinutesRecord()" style="padding:7px 16px;background:linear-gradient(90deg,#f093fb,#f5576c);color:#fff;border:none;border-radius:8px;font-size:0.84rem;font-weight:700;cursor:pointer;">💾 まとめを保存</button>
       </div>
     </div>
 
@@ -1817,6 +1868,16 @@
         <button class="minutes-add-btn" id="minutesAddBtnSimple" onclick="addMinutesTasks()">＋ チェック済みをTODOに追加</button>
       </div>
     </div>
+  </div>
+
+  <!-- 蓄積された会議まとめ -->
+  <div style="margin-top:28px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <p class="section-title" style="margin:0;">🗂 会議まとめ履歴</p>
+      <input id="minutesSearch" type="text" placeholder="🔍 会議名・内容で検索" oninput="renderMinutesHistory()" style="padding:6px 12px;border:1px solid #dde0e7;border-radius:8px;font-size:0.83rem;width:220px;">
+    </div>
+    <div id="minutesHistoryList"></div>
+    <p id="minutesHistoryEmpty" style="color:#aaa;font-size:0.85rem;text-align:center;padding:24px 0;display:none;">まだ保存された会議まとめはありません</p>
   </div>
 </div>
 
@@ -3046,7 +3107,99 @@ ${text.slice(0, 6000)}`;
     }
   }
 
-  function extractMinutesTasks() {
+  // ---- 会議まとめ蓄積 ----
+  let minutesRecords = JSON.parse(localStorage.getItem('minutesRecords') || '[]');
+
+  function saveMinutesRecord() {
+    const name = document.getElementById('minutesMeetingName').value || '無題の会議';
+    const decisions = [...document.querySelectorAll('#minutesDecisionsList li')].map(li => li.textContent);
+    const todos = minutesTasks.map(t => t.text);
+    const summary = document.getElementById('minutesSummaryText').textContent;
+
+    if (!summary && decisions.length === 0 && todos.length === 0) {
+      alert('保存する内容がありません。先にAIで解析してください。');
+      return;
+    }
+
+    const record = {
+      id: 'mr_' + Date.now(),
+      name,
+      date: new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }),
+      decisions,
+      todos,
+      summary
+    };
+
+    minutesRecords.unshift(record);
+    localStorage.setItem('minutesRecords', JSON.stringify(minutesRecords));
+    renderMinutesHistory();
+
+    // 保存完了フィードバック
+    const btn = document.querySelector('[onclick="saveMinutesRecord()"]');
+    btn.textContent = '✅ 保存しました';
+    setTimeout(() => { btn.textContent = '💾 まとめを保存'; }, 2000);
+  }
+
+  function deleteMinutesRecord(id) {
+    minutesRecords = minutesRecords.filter(r => r.id !== id);
+    localStorage.setItem('minutesRecords', JSON.stringify(minutesRecords));
+    renderMinutesHistory();
+  }
+
+  function addTodosFromRecord(id) {
+    const record = minutesRecords.find(r => r.id === id);
+    if (!record || !record.todos.length) return;
+    const todayKey = (DAYS.find(d => d.today) || DAYS[0]).key;
+    record.todos.forEach((text, i) => {
+      weekTasks[todayKey].push({ id: 'mr_t_' + Date.now() + i, text });
+    });
+    saveWeekTasks();
+    render();
+    alert(`${record.todos.length}件のTODOを追加しました`);
+  }
+
+  function renderMinutesHistory() {
+    const query = (document.getElementById('minutesSearch')?.value || '').trim().toLowerCase();
+    const list = document.getElementById('minutesHistoryList');
+    const empty = document.getElementById('minutesHistoryEmpty');
+    if (!list) return;
+
+    const filtered = minutesRecords.filter(r =>
+      !query || r.name.toLowerCase().includes(query) || r.summary.toLowerCase().includes(query) ||
+      r.decisions.join('').toLowerCase().includes(query) || r.todos.join('').toLowerCase().includes(query)
+    );
+
+    if (!filtered.length) {
+      list.innerHTML = '';
+      empty.style.display = '';
+      return;
+    }
+    empty.style.display = 'none';
+    list.innerHTML = filtered.map(r => `
+      <div class="minutes-history-card">
+        <div class="minutes-history-header">
+          <span class="minutes-history-title">📋 ${r.name}</span>
+          <span class="minutes-history-date">${r.date}</span>
+        </div>
+        ${r.decisions.length ? `
+          <div class="minutes-history-label">✅ 決定事項</div>
+          <div class="minutes-history-section">${r.decisions.map(d => '・' + d).join('<br>')}</div>
+        ` : ''}
+        ${r.todos.length ? `
+          <div class="minutes-history-label">📌 TODO</div>
+          <div class="minutes-history-section">${r.todos.map(t => '・' + t).join('<br>')}</div>
+        ` : ''}
+        ${r.summary ? `
+          <div class="minutes-history-label">📝 まとめ</div>
+          <div class="minutes-history-section">${r.summary}</div>
+        ` : ''}
+        <div class="minutes-history-actions">
+          <button class="minutes-history-btn" style="background:#e8f0fe;color:#3367d6;" onclick="addTodosFromRecord('${r.id}')">＋ TODOに追加</button>
+          <button class="minutes-history-btn" style="background:#fce8e6;color:#d93025;" onclick="deleteMinutesRecord('${r.id}')">🗑 削除</button>
+        </div>
+      </div>
+    `).join('');
+  }
     const text = document.getElementById('minutesInput').value;
     const emptyMsg = document.getElementById('minutesEmptyMsg');
     const extracted = parseTasksFromMinutes(text);
@@ -3717,6 +3870,7 @@ ${allEvents.join('\n')}
   renderKeymans();
   initTabs();
   updateTabGlow();
+  renderMinutesHistory();
 
   // ============================================================
   // ---- Routine CRUD ----
