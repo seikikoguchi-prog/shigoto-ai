@@ -2936,33 +2936,43 @@
     }
   }
 
-  // AIで議事録を解析（JSONP方式）
+  // AIで議事録を解析（クリップボード方式）
   async function extractMinutesAI() {
     const text = document.getElementById('minutesInput').value.trim();
     if (!text) { alert('議事録を貼り付けてください'); return; }
-
     const meetingName = document.getElementById('minutesMeetingName').value || '会議';
-    const btn = document.querySelector('[onclick="extractMinutesAI()"]');
-    btn.textContent = '⏳ AI解析中...';
-    btn.disabled = true;
 
-    const prompt = `以下の会議「${meetingName}」の議事録を解析してください。JSONのみ返してください：
-{"decisions":["決定事項1"],"todos":[{"task":"タスク","assignee":"担当者","deadline":"期限"}],"summary":"要約3文"}
+    const claudePrompt = `会議「${meetingName}」の議事録を解析して以下の形式で整理してください。
+
+✅ 決定事項
+・（決定したこと）
+
+📌 TODO・アクションアイテム
+・（タスク）｜担当：（担当者）｜期限：（期限）
+
+📝 議事録まとめ
+（3〜5文で要約）
 
 【議事録】
-${text.slice(0, 3000)}`;
+${text.slice(0, 6000)}`;
 
-    try {
-      const aiUrl = GAS_CALENDAR_URL + '?mode=ai_minutes&name=' + encodeURIComponent(meetingName.slice(0, 50)) + '&text=' + encodeURIComponent(text.slice(0, 1500));
-      const obj = await fetchJsonp(aiUrl);
-      renderMinutesAIResult(typeof obj === 'string' ? JSON.parse(obj) : obj);
-    } catch (e) {
-      console.error('AI解析エラー:', e);
-      alert('AI解析に失敗しました。');
-    } finally {
-      btn.textContent = '🤖 AIで解析';
-      btn.disabled = false;
-    }
+    const doCopy = () => {
+      const ta = document.createElement('textarea');
+      ta.value = claudePrompt;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    };
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(claudePrompt).catch(doCopy);
+    } else { doCopy(); }
+
+    const btn = document.querySelector('[onclick="extractMinutesAI()"]');
+    const orig = btn.textContent;
+    btn.textContent = '✅ Claudeに貼り付けてください';
+    setTimeout(() => { btn.textContent = orig; }, 4000);
   }
 
   function renderMinutesAIResult(obj) {
@@ -3281,44 +3291,6 @@ ${allEvents.join('\n')}
       }).catch(doCopy);
     } else {
       doCopy();
-    }
-  }
-
-  async function _generateShuppoAI(base, allEvents) {
-    // イベントタイトルのみ抽出して短縮（URL長制限対策）
-    const titles = allEvents
-      .map(t => t.replace(/^\d{2}:\d{2}〜\d{2}:\d{2}\s*/, '').trim())
-      .filter((v, i, a) => a.indexOf(v) === i)
-      .slice(0, 20)
-      .join('、');
-
-    try {
-      const aiUrl = GAS_CALENDAR_URL + '?mode=ai_shuppo&titles=' + encodeURIComponent(titles);
-      const obj = await fetchJsonp(aiUrl);
-
-      let result = base;
-      result = result.replace(
-        '① 今週の印象的な出来事・気づき（「これは面白かった！」という体験）',
-        `① 今週の印象的な出来事・気づき（「これは面白かった！」という体験）\n${obj.q1}`
-      );
-      result = result.replace(
-        '② 経営とマネジメントの気づき（経営・マネジメントの視点で何が読み取れるか）',
-        `② 経営とマネジメントの気づき（経営・マネジメントの視点で何が読み取れるか）\n${obj.q2}`
-      );
-      result = result.replace(
-        '③ 数字・進捗（自分の仕事に紐づく数字）',
-        `③ 数字・進捗（自分の仕事に紐づく数字）\n${obj.q3}`
-      );
-      result = result.replace(
-        '④ 個人の振り返り（今週何を学んで、来週何を変えるのか）',
-        `④ 個人の振り返り（今週何を学んで、来週何を変えるのか）\n${obj.q4}`
-      );
-
-      document.getElementById('reportOutput').value = result;
-    } catch (e) {
-      console.error('AI生成エラー:', e);
-      document.getElementById('reportOutput').value =
-        base.replace('\n⏳ AIが下書きを生成中...', '');
     }
   }
 
