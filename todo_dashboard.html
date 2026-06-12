@@ -1830,6 +1830,7 @@
     <div class="minutes-input-actions">
       <button class="minutes-extract-btn" onclick="extractMinutesAI()" style="background:linear-gradient(90deg,#667eea,#764ba2);">🤖 AIで解析</button>
       <button class="minutes-extract-btn" onclick="extractMinutesTasks()">🔍 簡易抽出</button>
+      <button class="minutes-extract-btn" onclick="saveMinutesManual()" style="background:linear-gradient(90deg,#f093fb,#f5576c);">💾 テキストを保存</button>
       <button class="minutes-clear-btn" onclick="clearMinutes()">クリア</button>
     </div>
 
@@ -3110,7 +3111,45 @@ ${text.slice(0, 6000)}`;
   // ---- 会議まとめ蓄積 ----
   let minutesRecords = JSON.parse(localStorage.getItem('minutesRecords') || '[]');
 
-  function saveMinutesRecord() {
+  function saveMinutesManual() {
+    const name = document.getElementById('minutesMeetingName').value || '無題の会議';
+    const text = document.getElementById('minutesInput').value.trim();
+    if (!text) { alert('保存する内容がありません'); return; }
+
+    // テキストから決定事項・TODO・まとめを簡易パース
+    const decisions = [];
+    const todos = [];
+    let summary = '';
+    const lines = text.split('\n');
+    let section = '';
+    lines.forEach(line => {
+      const l = line.trim();
+      if (l.includes('決定事項')) { section = 'decisions'; return; }
+      if (l.includes('TODO') || l.includes('アクション')) { section = 'todos'; return; }
+      if (l.includes('まとめ') || l.includes('要約')) { section = 'summary'; return; }
+      if (!l || l.startsWith('✅') || l.startsWith('📌') || l.startsWith('📝')) return;
+      if (section === 'decisions' && l.startsWith('・')) decisions.push(l.slice(1).trim());
+      else if (section === 'todos' && l.startsWith('・')) todos.push(l.slice(1).split('｜')[0].trim());
+      else if (section === 'summary' && l) summary += (summary ? ' ' : '') + l;
+    });
+
+    const record = {
+      id: 'mr_' + Date.now(),
+      name,
+      date: new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }),
+      decisions,
+      todos,
+      summary: summary || text.slice(0, 200)
+    };
+
+    minutesRecords.unshift(record);
+    localStorage.setItem('minutesRecords', JSON.stringify(minutesRecords));
+    renderMinutesHistory();
+
+    const btn = document.querySelector('[onclick="saveMinutesManual()"]');
+    btn.textContent = '✅ 保存しました';
+    setTimeout(() => { btn.textContent = '💾 テキストを保存'; }, 2000);
+  }
     const name = document.getElementById('minutesMeetingName').value || '無題の会議';
     const decisions = [...document.querySelectorAll('#minutesDecisionsList li')].map(li => li.textContent);
     const todos = minutesTasks.map(t => t.text);
