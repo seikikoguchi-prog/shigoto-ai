@@ -2980,7 +2980,7 @@
     setTimeout(() => document.getElementById('reportMemoInput').focus(), 50);
   }
 
-  function openShuppoModal() {
+  async function openShuppoModal() {
     document.getElementById('reportModalTitle').textContent = '📊 週報';
     document.getElementById('reportInputStep').style.display = 'none';
     document.getElementById('reportOutputStep').style.display = '';
@@ -2991,7 +2991,7 @@
     document.getElementById('reportOutput').value = base;
     document.getElementById('reportOutput').readOnly = true;
 
-    // カレンダーデータがあればClaudeに貼り付け用テキストをコピー
+    // カレンダーデータ収集
     const allEvents = [];
     DAYS.forEach(d => {
       (weekTasks[d.key] || []).forEach(t => {
@@ -3000,7 +3000,21 @@
     });
     if (!calendarLoaded || allEvents.length === 0) return;
 
-    const claudePrompt = `以下は今週のカレンダーイベント一覧です。これをもとに週報の①〜④をそれぞれ2〜3文で下書きしてください。
+    // Meet文字起こしを取得
+    document.getElementById('reportModalTitle').textContent = '📊 週報　⏳ Meet文字起こしを取得中...';
+    let transcriptText = '';
+    try {
+      const tRes = await fetch(GAS_CALENDAR_URL + '?mode=transcript', { redirect: 'follow' });
+      const tData = JSON.parse(await tRes.text());
+      if (Array.isArray(tData) && tData.length > 0) {
+        transcriptText = '\n\n【今週のMeet文字起こし】\n' +
+          tData.map(t => `■ ${t.subject}\n${t.body}`).join('\n\n');
+      }
+    } catch (err) {
+      console.warn('文字起こし取得失敗:', err);
+    }
+
+    const claudePrompt = `以下は今週のカレンダーイベント一覧です。これをもとに週報の①〜④をそれぞれ2〜3文で下書きしてください。${transcriptText}
 
 【今週のイベント】
 ${allEvents.join('\n')}
