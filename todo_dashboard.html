@@ -1189,7 +1189,51 @@
 
     .minutes-clear-btn:hover { background: #dde0e7; }
 
-    .minutes-empty-msg {
+    .minutes-ai-section {
+      background: #f7f9ff;
+      border: 1px solid #e0e7ff;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .minutes-ai-header {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #3a3a5c;
+      margin-bottom: 8px;
+    }
+    .minutes-ai-list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 0.84rem;
+      color: #444;
+      line-height: 1.8;
+    }
+    .minutes-todo-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 0.84rem;
+    }
+    .minutes-todo-item:last-child { border-bottom: none; }
+    .minutes-todo-assignee {
+      font-size: 0.75rem;
+      background: #e8f0fe;
+      color: #3367d6;
+      border-radius: 4px;
+      padding: 1px 6px;
+      white-space: nowrap;
+    }
+    .minutes-todo-deadline {
+      font-size: 0.75rem;
+      background: #fce8e6;
+      color: #d93025;
+      border-radius: 4px;
+      padding: 1px 6px;
+      white-space: nowrap;
+    }
       font-size: 0.82rem;
       color: #f57c00;
       margin-top: 8px;
@@ -1711,15 +1755,50 @@
     <br>
     <button class="save-btn" onclick="saveMemo()">保存</button>
   </div>
-  <p class="section-title" style="margin-top:28px;" id="section-minutes">📝 議事録タスク抽出</p>
+  <p class="section-title" style="margin-top:28px;" id="section-minutes">📝 会議まとめ・タスク抽出</p>
   <div class="minutes-card">
-    <p class="minutes-sub">議事録・メモを貼り付けると「・」「-」「→」などの箇条書き行をタスクとして抽出します</p>
-    <textarea class="minutes-textarea" id="minutesInput" placeholder="例：&#10;・Aさんに見積もり依頼&#10;→ 次回MTGまでに資料作成&#10;- 〇〇の件を確認する"></textarea>
-    <p class="minutes-empty-msg" id="minutesEmptyMsg">⚠ タスクとして認識できる行が見つかりませんでした</p>
-    <div class="minutes-input-actions">
-      <button class="minutes-extract-btn" onclick="extractMinutesTasks()">🔍 タスクを抽出</button>
-      <button class="minutes-clear-btn"   onclick="clearMinutes()">クリア</button>
+    <p class="minutes-sub">議事録・文字起こしを貼り付けると、AIが決定事項・TODO・担当者・プロジェクトを自動整理します</p>
+
+    <!-- 入力エリア -->
+    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:0.82rem;color:#888;">会議名：</span>
+      <input id="minutesMeetingName" type="text" placeholder="例：DSチームmtg 6/12" style="flex:1;min-width:180px;padding:6px 10px;border:1px solid #dde0e7;border-radius:6px;font-size:0.85rem;">
+      <button onclick="fetchGmailTranscript()" style="padding:6px 12px;background:#4285f4;color:#fff;border:none;border-radius:6px;font-size:0.82rem;cursor:pointer;">📧 Gmailから取得</button>
     </div>
+    <textarea class="minutes-textarea" id="minutesInput" placeholder="議事録・文字起こしをここに貼り付け&#10;&#10;例：&#10;・Aさんに見積もり依頼&#10;→ 次回MTGまでに資料作成&#10;- 〇〇の件を確認する"></textarea>
+    <p class="minutes-empty-msg" id="minutesEmptyMsg">⚠ タスクとして認識できる行が見つかりませんでした</p>
+
+    <!-- ボタン -->
+    <div class="minutes-input-actions">
+      <button class="minutes-extract-btn" onclick="extractMinutesAI()" style="background:linear-gradient(90deg,#667eea,#764ba2);">🤖 AIで解析</button>
+      <button class="minutes-extract-btn" onclick="extractMinutesTasks()">🔍 簡易抽出</button>
+      <button class="minutes-clear-btn" onclick="clearMinutes()">クリア</button>
+    </div>
+
+    <!-- AI解析結果エリア -->
+    <div id="minutesAIResult" style="display:none;margin-top:16px;">
+      <!-- 決定事項 -->
+      <div class="minutes-ai-section" id="minutesDecisions" style="display:none;">
+        <div class="minutes-ai-header">✅ 決定事項</div>
+        <ul class="minutes-ai-list" id="minutesDecisionsList"></ul>
+      </div>
+      <!-- TODO -->
+      <div class="minutes-ai-section" id="minutesTodoSection" style="display:none;">
+        <div class="minutes-ai-header">📌 TODO・アクションアイテム</div>
+        <div id="minutesTodoList"></div>
+      </div>
+      <!-- 議事録まとめ -->
+      <div class="minutes-ai-section" id="minutesSummarySection" style="display:none;">
+        <div class="minutes-ai-header">📝 議事録まとめ</div>
+        <p id="minutesSummaryText" style="font-size:0.85rem;color:#444;line-height:1.7;white-space:pre-wrap;margin:8px 0 0;"></p>
+      </div>
+      <!-- TODOに追加ボタン -->
+      <div style="margin-top:12px;">
+        <button class="minutes-add-btn" id="minutesAddBtn" onclick="addMinutesTasks()">＋ チェック済みをTODOに追加</button>
+      </div>
+    </div>
+
+    <!-- 簡易抽出結果（従来） -->
     <div class="minutes-preview" id="minutesPreview" style="display:none">
       <div class="minutes-preview-header">
         <span class="minutes-count" id="minutesCount"></span>
@@ -1727,7 +1806,7 @@
       </div>
       <div class="minutes-task-list" id="minutesTaskList"></div>
       <div class="minutes-preview-footer">
-        <button class="minutes-add-btn" id="minutesAddBtn" onclick="addMinutesTasks()">＋ チェック済みをTODOに追加</button>
+        <button class="minutes-add-btn" id="minutesAddBtnSimple" onclick="addMinutesTasks()">＋ チェック済みをTODOに追加</button>
       </div>
     </div>
   </div>
@@ -2796,7 +2875,144 @@
     }, []);
   }
 
-  function extractMinutesTasks() {
+  // Gmail から文字起こしを取得して議事録エリアに挿入
+  async function fetchGmailTranscript() {
+    const btn = document.querySelector('[onclick="fetchGmailTranscript()"]');
+    btn.textContent = '⏳ 取得中...';
+    btn.disabled = true;
+    try {
+      const res = await fetch(GAS_CALENDAR_URL + '?mode=transcript', { redirect: 'follow' });
+      const data = JSON.parse(await res.text());
+      if (!Array.isArray(data) || data.length === 0) {
+        btn.textContent = '📧 メールなし';
+        setTimeout(() => { btn.textContent = '📧 Gmailから取得'; btn.disabled = false; }, 2000);
+        return;
+      }
+      // 最新1件をエリアに挿入
+      const latest = data[0];
+      document.getElementById('minutesInput').value = latest.body;
+      document.getElementById('minutesMeetingName').value = latest.subject;
+      btn.textContent = '✅ 取得完了';
+      setTimeout(() => { btn.textContent = '📧 Gmailから取得'; btn.disabled = false; }, 2000);
+    } catch (e) {
+      btn.textContent = '❌ 取得失敗';
+      setTimeout(() => { btn.textContent = '📧 Gmailから取得'; btn.disabled = false; }, 2000);
+    }
+  }
+
+  // AIで議事録を解析
+  async function extractMinutesAI() {
+    const text = document.getElementById('minutesInput').value.trim();
+    if (!text) { alert('議事録を貼り付けてください'); return; }
+
+    const meetingName = document.getElementById('minutesMeetingName').value || '会議';
+    const btn = document.querySelector('[onclick="extractMinutesAI()"]');
+    btn.textContent = '⏳ AI解析中...';
+    btn.disabled = true;
+
+    const prompt = `以下の会議「${meetingName}」の議事録・文字起こしを解析してください。
+以下のJSON形式のみで返してください（他の文字は一切含めない）：
+{
+  "decisions": ["決定事項1", "決定事項2"],
+  "todos": [
+    {"task": "タスク内容", "assignee": "担当者名（不明なら「未定」）", "deadline": "期限（不明なら「」）"},
+  ],
+  "summary": "会議全体の要約（3〜5文）"
+}
+
+【議事録】
+${text.slice(0, 4000)}`;
+
+    try {
+      const aiUrl = GAS_CALENDAR_URL + '?mode=ai&prompt=' + encodeURIComponent(prompt);
+      const res = await fetch(aiUrl, { redirect: 'follow' });
+      const rawText = await res.text();
+      const data = JSON.parse(rawText);
+      const content = (data.content || []).map(b => b.text || '').join('');
+      const match = content.match(/\{[\s\S]*\}/);
+      const obj = JSON.parse(match ? match[0] : content);
+
+      // 結果を表示
+      renderMinutesAIResult(obj);
+    } catch (e) {
+      console.error('AI解析エラー:', e);
+      alert('AI解析に失敗しました。簡易抽出をお試しください。');
+    } finally {
+      btn.textContent = '🤖 AIで解析';
+      btn.disabled = false;
+    }
+  }
+
+  function renderMinutesAIResult(obj) {
+    document.getElementById('minutesPreview').style.display = 'none';
+    document.getElementById('minutesAIResult').style.display = '';
+
+    // 決定事項
+    const decList = document.getElementById('minutesDecisionsList');
+    decList.innerHTML = '';
+    if (obj.decisions && obj.decisions.length) {
+      obj.decisions.forEach(d => {
+        const li = document.createElement('li');
+        li.textContent = d;
+        decList.appendChild(li);
+      });
+      document.getElementById('minutesDecisions').style.display = '';
+    } else {
+      document.getElementById('minutesDecisions').style.display = 'none';
+    }
+
+    // TODO
+    const todoList = document.getElementById('minutesTodoList');
+    todoList.innerHTML = '';
+    minutesTasks = [];
+    if (obj.todos && obj.todos.length) {
+      const todayKey = (DAYS.find(d => d.today) || DAYS[0]).key;
+      obj.todos.forEach((t, i) => {
+        const id = 'ai_mt_' + Date.now().toString(36) + i;
+        minutesTasks.push({ id, text: t.task, assignee: 'self', day: todayKey, checked: true });
+
+        const row = document.createElement('div');
+        row.className = 'minutes-todo-item';
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = true;
+        cb.addEventListener('change', e => { minutesTasks[i].checked = e.target.checked; });
+
+        const taskText = document.createElement('span');
+        taskText.style.flex = '1';
+        taskText.textContent = t.task;
+
+        const tags = document.createElement('span');
+        tags.style.display = 'flex'; tags.style.gap = '4px'; tags.style.flexWrap = 'wrap';
+        if (t.assignee) {
+          const a = document.createElement('span');
+          a.className = 'minutes-todo-assignee';
+          a.textContent = t.assignee;
+          tags.appendChild(a);
+        }
+        if (t.deadline) {
+          const d = document.createElement('span');
+          d.className = 'minutes-todo-deadline';
+          d.textContent = t.deadline;
+          tags.appendChild(d);
+        }
+
+        row.append(cb, taskText, tags);
+        todoList.appendChild(row);
+      });
+      document.getElementById('minutesTodoSection').style.display = '';
+    } else {
+      document.getElementById('minutesTodoSection').style.display = 'none';
+    }
+
+    // まとめ
+    if (obj.summary) {
+      document.getElementById('minutesSummaryText').textContent = obj.summary;
+      document.getElementById('minutesSummarySection').style.display = '';
+    } else {
+      document.getElementById('minutesSummarySection').style.display = 'none';
+    }
+  }
     const text = document.getElementById('minutesInput').value;
     const emptyMsg = document.getElementById('minutesEmptyMsg');
     const extracted = parseTasksFromMinutes(text);
