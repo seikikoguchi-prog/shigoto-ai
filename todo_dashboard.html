@@ -3200,6 +3200,8 @@ ${text.slice(0, 6000)}`;
       </div>
     `).join('');
   }
+
+  function extractMinutesTasks() {
     const text = document.getElementById('minutesInput').value;
     const emptyMsg = document.getElementById('minutesEmptyMsg');
     const extracted = parseTasksFromMinutes(text);
