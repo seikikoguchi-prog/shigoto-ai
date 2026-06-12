@@ -3150,6 +3150,8 @@ ${text.slice(0, 6000)}`;
     btn.textContent = '✅ 保存しました';
     setTimeout(() => { btn.textContent = '💾 テキストを保存'; }, 2000);
   }
+
+  function saveMinutesRecord() {
     const name = document.getElementById('minutesMeetingName').value || '無題の会議';
     const decisions = [...document.querySelectorAll('#minutesDecisionsList li')].map(li => li.textContent);
     const todos = minutesTasks.map(t => t.text);
@@ -3198,46 +3200,44 @@ ${text.slice(0, 6000)}`;
   }
 
   function renderMinutesHistory() {
-    const query = (document.getElementById('minutesSearch')?.value || '').trim().toLowerCase();
-    const list = document.getElementById('minutesHistoryList');
-    const empty = document.getElementById('minutesHistoryEmpty');
+    var query = (document.getElementById('minutesSearch') ? document.getElementById('minutesSearch').value : '').trim().toLowerCase();
+    var list = document.getElementById('minutesHistoryList');
+    var empty = document.getElementById('minutesHistoryEmpty');
     if (!list) return;
 
-    const filtered = minutesRecords.filter(r =>
-      !query || r.name.toLowerCase().includes(query) || r.summary.toLowerCase().includes(query) ||
-      r.decisions.join('').toLowerCase().includes(query) || r.todos.join('').toLowerCase().includes(query)
-    );
+    var filtered = minutesRecords.filter(function(r) {
+      return !query || r.name.toLowerCase().includes(query) || r.summary.toLowerCase().includes(query) ||
+        r.decisions.join('').toLowerCase().includes(query) || r.todos.join('').toLowerCase().includes(query);
+    });
 
     if (!filtered.length) {
       list.innerHTML = '';
-      empty.style.display = '';
+      if (empty) empty.style.display = '';
       return;
     }
-    empty.style.display = 'none';
-    list.innerHTML = filtered.map(r => `
-      <div class="minutes-history-card">
-        <div class="minutes-history-header">
-          <span class="minutes-history-title">📋 ${r.name}</span>
-          <span class="minutes-history-date">${r.date}</span>
-        </div>
-        ${r.decisions.length ? `
-          <div class="minutes-history-label">✅ 決定事項</div>
-          <div class="minutes-history-section">${r.decisions.map(d => '・' + d).join('<br>')}</div>
-        ` : ''}
-        ${r.todos.length ? `
-          <div class="minutes-history-label">📌 TODO</div>
-          <div class="minutes-history-section">${r.todos.map(t => '・' + t).join('<br>')}</div>
-        ` : ''}
-        ${r.summary ? `
-          <div class="minutes-history-label">📝 まとめ</div>
-          <div class="minutes-history-section">${r.summary}</div>
-        ` : ''}
-        <div class="minutes-history-actions">
-          <button class="minutes-history-btn" style="background:#e8f0fe;color:#3367d6;" onclick="addTodosFromRecord('${r.id}')">＋ TODOに追加</button>
-          <button class="minutes-history-btn" style="background:#fce8e6;color:#d93025;" onclick="deleteMinutesRecord('${r.id}')">🗑 削除</button>
-        </div>
-      </div>
-    `).join('');
+    if (empty) empty.style.display = 'none';
+
+    list.innerHTML = filtered.map(function(r) {
+      var decisionsHtml = r.decisions.length
+        ? '<div class="minutes-history-label">✅ 決定事項</div><div class="minutes-history-section">' + r.decisions.map(function(d){ return '・' + d; }).join('<br>') + '</div>'
+        : '';
+      var todosHtml = r.todos.length
+        ? '<div class="minutes-history-label">📌 TODO</div><div class="minutes-history-section">' + r.todos.map(function(t){ return '・' + t; }).join('<br>') + '</div>'
+        : '';
+      var summaryHtml = r.summary
+        ? '<div class="minutes-history-label">📝 まとめ</div><div class="minutes-history-section">' + r.summary + '</div>'
+        : '';
+      return '<div class="minutes-history-card">' +
+        '<div class="minutes-history-header">' +
+        '<span class="minutes-history-title">📋 ' + r.name + '</span>' +
+        '<span class="minutes-history-date">' + r.date + '</span>' +
+        '</div>' +
+        decisionsHtml + todosHtml + summaryHtml +
+        '<div class="minutes-history-actions">' +
+        '<button class="minutes-history-btn" style="background:#e8f0fe;color:#3367d6;" data-id="' + r.id + '" onclick="addTodosFromRecord(this.dataset.id)">＋ TODOに追加</button>' +
+        '<button class="minutes-history-btn" style="background:#fce8e6;color:#d93025;" data-id="' + r.id + '" onclick="deleteMinutesRecord(this.dataset.id)">🗑 削除</button>' +
+        '</div></div>';
+    }).join('');
   }
 
   function extractMinutesTasks() {
