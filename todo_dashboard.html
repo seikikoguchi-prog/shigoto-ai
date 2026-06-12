@@ -3021,6 +3021,8 @@ ${text.slice(0, 4000)}`;
       document.getElementById('minutesSummarySection').style.display = 'none';
     }
   }
+
+  function extractMinutesTasks() {
     const text = document.getElementById('minutesInput').value;
     const emptyMsg = document.getElementById('minutesEmptyMsg');
     const extracted = parseTasksFromMinutes(text);
