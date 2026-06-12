@@ -3191,15 +3191,21 @@ ${text.slice(0, 6000)}`;
     const record = minutesRecords.find(r => r.id === id);
     if (!record || !record.todos.length) { alert('TODOがありません'); return; }
     const todayKey = (DAYS.find(d => d.today) || DAYS[0]).key;
+    let added = 0;
     record.todos.forEach((text, i) => {
+      const cb = document.getElementById('todo_cb_' + id + '_' + i);
+      if (!cb || !cb.checked) return;
+      const dateInput = document.getElementById('todo_date_' + id + '_' + i);
+      const deadline = dateInput && dateInput.value ? '【期限:' + dateInput.value + '】 ' : '';
       if (!weekTasks[todayKey]) weekTasks[todayKey] = [];
-      weekTasks[todayKey].push({ id: 'mr_t_' + Date.now().toString(36) + i, text });
+      weekTasks[todayKey].push({ id: 'mr_t_' + Date.now().toString(36) + i, text: deadline + text });
+      added++;
     });
+    if (!added) { alert('追加するTODOにチェックを入れてください'); return; }
     render();
-    // 週次TODOタブに切り替え
     const tabBtn = document.querySelector('.tab-btn[data-tab="tab-todo"]');
     if (tabBtn) tabBtn.click();
-    alert(record.todos.length + '件のTODOを追加しました');
+    alert(added + '件のTODOを追加しました');
   }
 
   function renderMinutesHistory() {
@@ -3224,9 +3230,17 @@ ${text.slice(0, 6000)}`;
       var decisionsHtml = r.decisions.length
         ? '<div class="minutes-history-label">✅ 決定事項</div><div class="minutes-history-section">' + r.decisions.map(function(d){ return '・' + d; }).join('<br>') + '</div>'
         : '';
-      var todosHtml = r.todos.length
-        ? '<div class="minutes-history-label">📌 TODO</div><div class="minutes-history-section">' + r.todos.map(function(t){ return '・' + t; }).join('<br>') + '</div>'
-        : '';
+      var todosHtml = '';
+      if (r.todos.length) {
+        todosHtml = '<div class="minutes-history-label">📌 TODO（追加するものにチェック）</div>';
+        todosHtml += r.todos.map(function(t, i) {
+          return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap;">' +
+            '<input type="checkbox" id="todo_cb_' + r.id + '_' + i + '" checked style="width:16px;height:16px;cursor:pointer;">' +
+            '<span style="flex:1;font-size:0.83rem;color:#444;">' + t + '</span>' +
+            '<input type="date" id="todo_date_' + r.id + '_' + i + '" style="padding:3px 6px;border:1px solid #dde0e7;border-radius:6px;font-size:0.78rem;color:#555;">' +
+            '</div>';
+        }).join('');
+      }
       var summaryHtml = r.summary
         ? '<div class="minutes-history-label">📝 まとめ</div><div class="minutes-history-section">' + r.summary + '</div>'
         : '';
@@ -3237,7 +3251,7 @@ ${text.slice(0, 6000)}`;
         '</div>' +
         decisionsHtml + todosHtml + summaryHtml +
         '<div class="minutes-history-actions">' +
-        '<button class="minutes-history-btn" style="background:#e8f0fe;color:#3367d6;" data-id="' + r.id + '" onclick="addTodosFromRecord(this.dataset.id)">＋ TODOに追加</button>' +
+        '<button class="minutes-history-btn" style="background:#e8f0fe;color:#3367d6;" data-id="' + r.id + '" onclick="addTodosFromRecord(this.dataset.id)">＋ チェックしたTODOを追加</button>' +
         '<button class="minutes-history-btn" style="background:#fce8e6;color:#d93025;" data-id="' + r.id + '" onclick="deleteMinutesRecord(this.dataset.id)">🗑 削除</button>' +
         '</div></div>';
     }).join('');
