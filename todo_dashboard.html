@@ -2008,6 +2008,29 @@
   // ============================================================
   const GAS_CALENDAR_URL = 'https://script.google.com/macros/s/AKfycbzNxSobHMx-UQAnYvhoORX7yvwyD8EdW3Qz8pnhMnqee6_1srxG2npmk2qrTON_4KMi/exec';
 
+  // JSONP方式でGASを呼び出す（CORSを回避）
+  function fetchJsonp(url) {
+    return new Promise((resolve, reject) => {
+      const cbName = '_gc' + Date.now();
+      const script = document.createElement('script');
+      const timer = setTimeout(() => {
+        delete window[cbName];
+        document.body.removeChild(script);
+        reject(new Error('JSONP timeout'));
+      }, 15000);
+      window[cbName] = (data) => {
+        clearTimeout(timer);
+        delete window[cbName];
+        document.body.removeChild(script);
+        resolve(data);
+      };
+      const sep = url.includes('?') ? '&' : '?';
+      script.src = url + sep + 'callback=' + cbName;
+      script.onerror = () => { clearTimeout(timer); reject(new Error('JSONP error')); };
+      document.body.appendChild(script);
+    });
+  }
+
   // ---- 週ナビ ----
   let currentWeekOffset = 0;
   const DAY_KEYS   = ['mon', 'tue', 'wed', 'thu', 'fri'];
@@ -2889,8 +2912,7 @@
     btn.textContent = '⏳ 取得中...';
     btn.disabled = true;
     try {
-      const res = await fetch(GAS_CALENDAR_URL + '?mode=transcript', { redirect: 'follow' });
-      const data = JSON.parse(await res.text());
+      const data = await fetchJsonp(GAS_CALENDAR_URL + '?mode=transcript');
       if (!Array.isArray(data) || data.length === 0) {
         btn.textContent = '📧 メールなし';
         setTimeout(() => { btn.textContent = '📧 Gmailから取得'; btn.disabled = false; }, 2000);
@@ -2908,47 +2930,33 @@
     }
   }
 
-  // AIで議事録を解析（クリップボード方式）
+  // AIで議事録を解析（JSONP方式）
   async function extractMinutesAI() {
     const text = document.getElementById('minutesInput').value.trim();
     if (!text) { alert('議事録を貼り付けてください'); return; }
 
     const meetingName = document.getElementById('minutesMeetingName').value || '会議';
-
-    const claudePrompt = `以下の会議「${meetingName}」の議事録・文字起こしを解析して、以下の形式で整理してください。
-
-✅ 決定事項
-・（決定したこと）
-
-📌 TODO・アクションアイテム
-・（タスク）｜担当：（担当者）｜期限：（期限）
-
-📝 議事録まとめ
-（会議全体の要約を3〜5文で）
-
-【議事録・文字起こし】
-${text.slice(0, 6000)}`;
-
-    const doCopy = () => {
-      const ta = document.createElement('textarea');
-      ta.value = claudePrompt;
-      ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-    };
-
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(claudePrompt).catch(doCopy);
-    } else {
-      doCopy();
-    }
-
-    // ボタンにコピー完了を表示
     const btn = document.querySelector('[onclick="extractMinutesAI()"]');
-    btn.textContent = '✅ Claudeに貼り付けてください';
-    setTimeout(() => { btn.textContent = '🤖 AIで解析'; }, 4000);
+    btn.textContent = '⏳ AI解析中...';
+    btn.disabled = true;
+
+    const prompt = `以下の会議「${meetingName}」の議事録を解析してください。JSONのみ返してください：
+{"decisions":["決定事項1"],"todos":[{"task":"タスク","assignee":"担当者","deadline":"期限"}],"summary":"要約3文"}
+
+【議事録】
+${text.slice(0, 3000)}`;
+
+    try {
+      const aiUrl = GAS_CALENDAR_URL + '?mode=ai&prompt=' + encodeURIComponent(prompt);
+      const obj = await fetchJsonp(aiUrl);
+      renderMinutesAIResult(typeof obj === 'string' ? JSON.parse(obj) : obj);
+    } catch (e) {
+      console.error('AI解析エラー:', e);
+      alert('AI解析に失敗しました。');
+    } finally {
+      btn.textContent = '🤖 AIで解析';
+      btn.disabled = false;
+    }
   }
 
   function renderMinutesAIResult(obj) {
@@ -3230,8 +3238,7 @@ ${text.slice(0, 6000)}`;
     document.getElementById('reportModalTitle').textContent = '📊 週報　⏳ Meet文字起こしを取得中...';
     let transcriptText = '';
     try {
-      const tRes = await fetch(GAS_CALENDAR_URL + '?mode=transcript', { redirect: 'follow' });
-      const tData = JSON.parse(await tRes.text());
+      const tData = await fetchJsonp(GAS_CALENDAR_URL + '?mode=transcript');
       if (Array.isArray(tData) && tData.length > 0) {
         transcriptText = '\n\n【今週のMeet文字起こし】\n' +
           tData.map(t => `■ ${t.subject}\n${t.body}`).join('\n\n');
@@ -3282,17 +3289,7 @@ ${allEvents.join('\n')}
 
     try {
       const aiUrl = GAS_CALENDAR_URL + '?mode=ai&prompt=' + encodeURIComponent(prompt);
-      const res = await fetch(aiUrl, { redirect: 'follow' });
-      const rawText = await res.text();
-      console.log('[AI] GASレスポンス:', rawText.slice(0, 300));
-
-      // AnthropicのレスポンスJSONをパース
-      const data = JSON.parse(rawText);
-      const text = (data.content || []).map(b => b.text || '').join('');
-      const clean = text.replace(/```json[\s\S]*?```|```/g, '').trim();
-      // JSONブロックを抽出
-      const jsonMatch = clean.match(/\{[\s\S]*\}/);
-      const obj = JSON.parse(jsonMatch ? jsonMatch[0] : clean);
+      const obj = await fetchJsonp(aiUrl);
 
       let result = base;
       result = result.replace(
@@ -3530,12 +3527,8 @@ ${allEvents.join('\n')}
         + String(monday.getMonth() + 1).padStart(2, '0') + '-'
         + String(monday.getDate()).padStart(2, '0');
 
-      const res = await fetch(GAS_CALENDAR_URL + '?weekStart=' + weekStart);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-
-      const data = await res.json();
-      console.log('[Calendar] GASレスポンス:', JSON.stringify(data).slice(0, 500));
-      if (data.error) throw new Error(data.error);
+      const data = await fetchJsonp(GAS_CALENDAR_URL + '?weekStart=' + weekStart);
+      console.log('[Calendar] GASレスポンス件数:', Array.isArray(data) ? data.length : data);
 
       // dateTime文字列 → JSTのDate（getUTC*メソッドでJST値を読める形式）
       const toJST = str => new Date(new Date(str).getTime() + 9 * 60 * 60 * 1000);
