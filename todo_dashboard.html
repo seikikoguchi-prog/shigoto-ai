@@ -2908,47 +2908,47 @@
     }
   }
 
-  // AIで議事録を解析
+  // AIで議事録を解析（クリップボード方式）
   async function extractMinutesAI() {
     const text = document.getElementById('minutesInput').value.trim();
     if (!text) { alert('議事録を貼り付けてください'); return; }
 
     const meetingName = document.getElementById('minutesMeetingName').value || '会議';
-    const btn = document.querySelector('[onclick="extractMinutesAI()"]');
-    btn.textContent = '⏳ AI解析中...';
-    btn.disabled = true;
 
-    const prompt = `以下の会議「${meetingName}」の議事録・文字起こしを解析してください。
-以下のJSON形式のみで返してください（他の文字は一切含めない）：
-{
-  "decisions": ["決定事項1", "決定事項2"],
-  "todos": [
-    {"task": "タスク内容", "assignee": "担当者名（不明なら「未定」）", "deadline": "期限（不明なら「」）"},
-  ],
-  "summary": "会議全体の要約（3〜5文）"
-}
+    const claudePrompt = `以下の会議「${meetingName}」の議事録・文字起こしを解析して、以下の形式で整理してください。
 
-【議事録】
-${text.slice(0, 4000)}`;
+✅ 決定事項
+・（決定したこと）
 
-    try {
-      const aiUrl = GAS_CALENDAR_URL + '?mode=ai&prompt=' + encodeURIComponent(prompt);
-      const res = await fetch(aiUrl, { redirect: 'follow' });
-      const rawText = await res.text();
-      const data = JSON.parse(rawText);
-      const content = (data.content || []).map(b => b.text || '').join('');
-      const match = content.match(/\{[\s\S]*\}/);
-      const obj = JSON.parse(match ? match[0] : content);
+📌 TODO・アクションアイテム
+・（タスク）｜担当：（担当者）｜期限：（期限）
 
-      // 結果を表示
-      renderMinutesAIResult(obj);
-    } catch (e) {
-      console.error('AI解析エラー:', e);
-      alert('AI解析に失敗しました。簡易抽出をお試しください。');
-    } finally {
-      btn.textContent = '🤖 AIで解析';
-      btn.disabled = false;
+📝 議事録まとめ
+（会議全体の要約を3〜5文で）
+
+【議事録・文字起こし】
+${text.slice(0, 6000)}`;
+
+    const doCopy = () => {
+      const ta = document.createElement('textarea');
+      ta.value = claudePrompt;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    };
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(claudePrompt).catch(doCopy);
+    } else {
+      doCopy();
     }
+
+    // ボタンにコピー完了を表示
+    const btn = document.querySelector('[onclick="extractMinutesAI()"]');
+    btn.textContent = '✅ Claudeに貼り付けてください';
+    setTimeout(() => { btn.textContent = '🤖 AIで解析'; }, 4000);
   }
 
   function renderMinutesAIResult(obj) {
