@@ -1755,6 +1755,11 @@
     <br>
     <button class="save-btn" onclick="saveMemo()">保存</button>
   </div>
+
+</div>
+
+<!-- 議事録 タブ -->
+<div class="tab-section" id="tab-minutes">
   <p class="section-title" style="margin-top:28px;" id="section-minutes">📝 会議まとめ・タスク抽出</p>
   <div class="minutes-card">
     <p class="minutes-sub">議事録・文字起こしを貼り付けると、AIが決定事項・TODO・担当者・プロジェクトを自動整理します</p>
@@ -4088,7 +4093,7 @@ ${allEvents.join('\n')}
       'section-project': 'tab-project',
       'section-monthly': 'tab-monthly',
       'section-keyman': 'tab-keyman',
-      'section-minutes': 'tab-todo',
+      'section-minutes': 'tab-minutes',
     };
     navBtns.forEach(btn => {
       btn.addEventListener('click', () => {
