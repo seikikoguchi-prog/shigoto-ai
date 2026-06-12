@@ -2008,26 +2008,31 @@
   // ============================================================
   const GAS_CALENDAR_URL = 'https://script.google.com/macros/s/AKfycbzNxSobHMx-UQAnYvhoORX7yvwyD8EdW3Qz8pnhMnqee6_1srxG2npmk2qrTON_4KMi/exec';
 
-  // JSONP方式でGASを呼び出す（CORSを回避）
+  // iframe + postMessage方式でGASを呼び出す（CORSを回避）
   function fetchJsonp(url) {
     return new Promise((resolve, reject) => {
-      const cbName = '_gc' + Date.now();
-      const script = document.createElement('script');
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
       const timer = setTimeout(() => {
-        delete window[cbName];
-        document.body.removeChild(script);
-        reject(new Error('JSONP timeout'));
-      }, 15000);
-      window[cbName] = (data) => {
+        window.removeEventListener('message', handler);
+        document.body.removeChild(iframe);
+        reject(new Error('GAS timeout'));
+      }, 20000);
+      const handler = (event) => {
+        if (event.source !== iframe.contentWindow) return;
         clearTimeout(timer);
-        delete window[cbName];
-        document.body.removeChild(script);
-        resolve(data);
+        window.removeEventListener('message', handler);
+        document.body.removeChild(iframe);
+        try {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          resolve(data);
+        } catch(e) {
+          resolve(event.data);
+        }
       };
-      const sep = url.includes('?') ? '&' : '?';
-      script.src = url + sep + 'callback=' + cbName;
-      script.onerror = () => { clearTimeout(timer); reject(new Error('JSONP error')); };
-      document.body.appendChild(script);
+      window.addEventListener('message', handler);
+      iframe.src = url;
+      document.body.appendChild(iframe);
     });
   }
 
